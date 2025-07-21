@@ -5,13 +5,13 @@ const menuItems = [
     id: 1,
     name: "Cheesy Pizza",
     price: 29,
-    image: "https://source.unsplash.com/400x300/?cheese-pizza",
+    image: "https://source.unsplash.com/400x300/?pizza",
   },
   {
     id: 2,
     name: "Masala Sandwich",
     price: 29,
-    image: "https://source.unsplash.com/400x300/?grilled-sandwich",
+    image: "https://source.unsplash.com/400x300/?sandwich",
   },
   {
     id: 3,
@@ -23,11 +23,11 @@ const menuItems = [
 
 const Home = () => {
   return (
-    <div className="p-4 bg-gradient-to-b from-pink-50 to-white min-h-screen pb-20">
-      <h2 className="text-3xl font-extrabold mb-6 text-center text-pink-600 drop-shadow-md">
-        🍕 Bakchodi Kitchen Deals 🍔
+    <div className="p-4 bg-gradient-to-br from-yellow-100 via-pink-50 to-red-100 min-h-screen">
+      <h2 className="text-3xl font-bold text-center text-pink-700 mb-6 underline decoration-pink-500">
+        🍽️ Today’s Special @ ₹29
       </h2>
-      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-6">
+      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-6 max-w-6xl mx-auto">
         {menuItems.map((item) => (
           <div
             key={item.id}
@@ -36,14 +36,16 @@ const Home = () => {
             <img
               src={item.image}
               alt={item.name}
-              className="w-full h-40 object-cover"
+              className="w-full h-48 object-cover"
             />
             <div className="p-4">
-              <h3 className="text-lg font-bold text-gray-800">{item.name}</h3>
-              <p className="text-sm text-gray-500 mb-2">Tasty & Affordable</p>
-              <span className="inline-block bg-pink-100 text-pink-600 px-3 py-1 rounded-full text-sm font-semibold">
-                ₹{item.price} Only
-              </span>
+              <h3 className="text-xl font-semibold text-gray-800">
+                {item.name}
+              </h3>
+              <p className="text-gray-500 mt-1 mb-3">Only ₹{item.price}</p>
+              <button className="w-full bg-pink-600 hover:bg-pink-700 text-white py-2 rounded-md font-semibold transition">
+                Order Now 🚀
+              </button>
             </div>
           </div>
         ))}
