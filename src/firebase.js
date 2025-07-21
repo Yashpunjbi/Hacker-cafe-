@@ -1,9 +1,9 @@
-// Import only what you use (tree-shakable)
-import { initializeApp } from "firebase/app";
-import { getFirestore } from "firebase/firestore"; // 🔥 Firestore
-import { getAuth } from "firebase/auth"; // 🔐 Auth (optional)
+// src/firebase.js
 
-// Firebase config
+import { initializeApp } from "firebase/app";
+import { getFirestore } from "firebase/firestore"; // ✅ Firestore import
+import { getAnalytics } from "firebase/analytics";
+
 const firebaseConfig = {
   apiKey: "AIzaSyC00vdY1ePvGb6eIq3GYTn9sZgHQm0lqGc",
   authDomain: "ddoskitchen.firebaseapp.com",
@@ -16,7 +16,9 @@ const firebaseConfig = {
 
 // Initialize Firebase
 const app = initializeApp(firebaseConfig);
+const analytics = getAnalytics(app);
 
-// Initialize Firestore and Auth (export to use in components)
-export const db = getFirestore(app);
-export const auth = getAuth(app);
+// ✅ Initialize Firestore
+const db = getFirestore(app);
+
+export { db }; // ✅ Export this so Checkout.jsx can use it
