@@ -1,63 +1,69 @@
-import React, { useState } from "react";
+import React from "react";
+import { useCart } from "../context/CartContext";
+import { Link } from "react-router-dom";
 
 const Cart = () => {
-  const [cartItems, setCartItems] = useState([]);
-  const [name, setName] = useState("");
-  const [phone, setPhone] = useState("");
-  const [address, setAddress] = useState("");
+  const { cart, removeFromCart, updateQty } = useCart();
 
-  const handleOrder = () => {
-    if (!name || !phone || !address) return alert("Please fill all details");
-    alert("Order Placed Successfully!");
-    setCartItems([]);
-  };
+  const total = cart.reduce((acc, item) => acc + item.price * item.qty, 0);
 
   return (
-    <div className="p-4 mb-20">
-      <h2 className="text-xl font-bold mb-4 text-center text-green-600">🛒 Your Cart</h2>
+    <div className="p-4">
+      <h2 className="text-xl font-bold mb-4 text-pink-600">Your Cart</h2>
 
-      {cartItems.length === 0 ? (
-        <p className="text-center text-gray-500">Cart is empty.</p>
+      {cart.length === 0 ? (
+        <p className="text-gray-500">Cart is empty</p>
       ) : (
-        <ul className="space-y-2 mb-4">
-          {cartItems.map((item, i) => (
-            <li key={i} className="flex justify-between border-b pb-1">
-              <span>{item.name}</span>
-              <span>₹{item.price}</span>
-            </li>
-          ))}
-        </ul>
-      )}
+        <>
+          <ul className="space-y-4">
+            {cart.map((item) => (
+              <li
+                key={item.id}
+                className="bg-white p-4 rounded-lg shadow flex items-center gap-4"
+              >
+                <img src={item.image} className="w-20 h-20 rounded" />
+                <div className="flex-1">
+                  <h3 className="text-lg font-semibold">{item.name}</h3>
+                  <p className="text-sm text-gray-600">₹{item.price}</p>
+                  <div className="flex items-center mt-2 gap-2">
+                    <button
+                      onClick={() => updateQty(item.id, item.qty - 1)}
+                      className="px-2 bg-gray-200 rounded"
+                    >
+                      -
+                    </button>
+                    <span>{item.qty}</span>
+                    <button
+                      onClick={() => updateQty(item.id, item.qty + 1)}
+                      className="px-2 bg-gray-200 rounded"
+                    >
+                      +
+                    </button>
+                  </div>
+                </div>
+                <button
+                  onClick={() => removeFromCart(item.id)}
+                  className="text-red-500"
+                >
+                  ❌
+                </button>
+              </li>
+            ))}
+          </ul>
 
-      <div className="mt-6 space-y-2">
-        <input
-          className="border p-2 w-full rounded"
-          placeholder="Your Name"
-          value={name}
-          onChange={(e) => setName(e.target.value)}
-        />
-        <input
-          className="border p-2 w-full rounded"
-          placeholder="Phone Number"
-          value={phone}
-          onChange={(e) => setPhone(e.target.value)}
-        />
-        <textarea
-          className="border p-2 w-full rounded"
-          placeholder="Delivery Address"
-          value={address}
-          onChange={(e) => setAddress(e.target.value)}
-        ></textarea>
-        <button
-          className="bg-green-500 text-white w-full p-2 rounded hover:bg-green-600"
-          onClick={handleOrder}
-        >
-          Place Order
-        </button>
-      </div>
+          <div className="mt-6 text-right">
+            <h3 className="text-lg font-bold">Total: ₹{total}</h3>
+            <Link
+              to="/checkout"
+              className="inline-block mt-4 bg-pink-600 text-white px-4 py-2 rounded"
+            >
+              Proceed to Checkout
+            </Link>
+          </div>
+        </>
+      )}
     </div>
   );
 };
 
 export default Cart;
-
