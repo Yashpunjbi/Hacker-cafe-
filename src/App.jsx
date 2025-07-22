@@ -3,6 +3,7 @@ import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
 import { CartProvider } from "./context/CartContext";
 import Menu from "./pages/Menu";
 import Cart from "./pages/Cart";
+import Offers from "./pages/Offers";
 import Checkout from "./pages/Checkout";
 import BottomNav from "./components/BottomNav";
 
@@ -14,6 +15,8 @@ const App = () => {
           <Routes>
             <Route path="/" element={<Menu />} />
             <Route path="/cart" element={<Cart />} />
+
+<Route path="/offers" element={<Offers />} />
             <Route path="/checkout" element={<Checkout />} />
           </Routes>
         </div>
