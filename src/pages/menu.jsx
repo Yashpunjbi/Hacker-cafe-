@@ -5,12 +5,48 @@ const Menu = () => {
   const { addToCart } = useCart();
 
   const items = [
-    { id: 1, name: "Cheese Pizza", price: 29 },
-    { id: 2, name: "Veg Sandwich", price: 29 },
-    { id: 3, name: "Cold Drink", price: 9 },
-    { id: 4, name: "Burger", price: 39 },
-    { id: 5, name: "Pasta", price: 49 },
-    { id: 6, name: "Fries", price: 19 },
+    {
+      id: 1,
+      name: "Cheese Pizza",
+      price: 29,
+      qty: 1,
+      image: "https://source.unsplash.com/400x300/?cheese-pizza",
+    },
+    {
+      id: 2,
+      name: "Veg Sandwich",
+      price: 29,
+      qty: 1,
+      image: "https://source.unsplash.com/400x300/?sandwich",
+    },
+    {
+      id: 3,
+      name: "Cold Drink",
+      price: 9,
+      qty: 1,
+      image: "https://source.unsplash.com/400x300/?cold-drink",
+    },
+    {
+      id: 4,
+      name: "Burger",
+      price: 39,
+      qty: 1,
+      image: "https://source.unsplash.com/400x300/?burger",
+    },
+    {
+      id: 5,
+      name: "Pasta",
+      price: 49,
+      qty: 1,
+      image: "https://source.unsplash.com/400x300/?pasta",
+    },
+    {
+      id: 6,
+      name: "Fries",
+      price: 19,
+      qty: 1,
+      image: "https://source.unsplash.com/400x300/?fries",
+    },
   ];
 
   return (
@@ -24,6 +60,11 @@ const Menu = () => {
             key={item.id}
             className="bg-white rounded-xl shadow-lg p-4 flex flex-col justify-between hover:shadow-pink-300 transition"
           >
+            <img
+              src={item.image}
+              alt={item.name}
+              className="w-full h-40 object-cover rounded mb-4"
+            />
             <h3 className="text-xl font-semibold text-gray-800">{item.name}</h3>
             <p className="text-gray-600 mb-4">₹{item.price}</p>
             <button
