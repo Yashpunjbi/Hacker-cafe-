@@ -4,16 +4,20 @@ import { CartProvider } from "./context/CartContext";
 import Menu from "./pages/Menu";
 import Cart from "./pages/Cart";
 import Checkout from "./pages/Checkout";
+import BottomNav from "./components/BottomNav";
 
 const App = () => {
   return (
     <CartProvider>
       <Router>
-        <Routes>
-          <Route path="/" element={<Menu />} />
-          <Route path="/cart" element={<Cart />} />
-          <Route path="/checkout" element={<Checkout />} />
-        </Routes>
+        <div className="pb-20"> {/* Space for BottomNav */}
+          <Routes>
+            <Route path="/" element={<Menu />} />
+            <Route path="/cart" element={<Cart />} />
+            <Route path="/checkout" element={<Checkout />} />
+          </Routes>
+        </div>
+        <BottomNav />
       </Router>
     </CartProvider>
   );
