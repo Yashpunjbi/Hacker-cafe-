@@ -1,58 +1,33 @@
-import React from "react";
+import React, { useEffect, useState } from "react";
 import { useCart } from "../context/CartContext";
+import { db } from "../firebase";
+import { collection, getDocs } from "firebase/firestore";
 
 const Menu = () => {
   const { addToCart } = useCart();
+  const [items, setItems] = useState([]);
 
-  const items = [
-    {
-      id: 1,
-      name: "Cheese Pizza",
-      price: 29,
-      qty: 1,
-      image: "https://source.unsplash.com/400x300/?cheese-pizza",
-    },
-    {
-      id: 2,
-      name: "Veg Sandwich",
-      price: 29,
-      qty: 1,
-      image: "https://source.unsplash.com/400x300/?sandwich",
-    },
-    {
-      id: 3,
-      name: "Cold Drink",
-      price: 9,
-      qty: 1,
-      image: "https://source.unsplash.com/400x300/?cold-drink",
-    },
-    {
-      id: 4,
-      name: "Burger",
-      price: 39,
-      qty: 1,
-      image: "https://source.unsplash.com/400x300/?burger",
-    },
-    {
-      id: 5,
-      name: "Pasta",
-      price: 49,
-      qty: 1,
-      image: "https://source.unsplash.com/400x300/?pasta",
-    },
-    {
-      id: 6,
-      name: "Fries",
-      price: 19,
-      qty: 1,
-      image: "https://source.unsplash.com/400x300/?fries",
-    },
-  ];
+  useEffect(() => {
+    const fetchItems = async () => {
+      try {
+        const querySnapshot = await getDocs(collection(db, "products"));
+        const products = [];
+        querySnapshot.forEach((doc) => {
+          products.push({ id: doc.id, ...doc.data(), qty: 1 });
+        });
+        setItems(products);
+      } catch (error) {
+        console.error("Error fetching products:", error);
+      }
+    };
+
+    fetchItems();
+  }, []);
 
   return (
     <div className="p-6">
       <h2 className="text-3xl font-bold text-center text-pink-600 mb-6">
-        Bakchodi Kitchen Menu 🍕
+        Hacker cafe Menu 🍕
       </h2>
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
         {items.map((item) => (
