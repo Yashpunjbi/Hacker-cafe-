@@ -1,6 +1,12 @@
-// src/firebase/FirebaseAuth.js
+// firebase/FirebaseAuth.js
 import { initializeApp } from "firebase/app";
-import { getAuth, createUserWithEmailAndPassword, signInWithEmailAndPassword } from "firebase/auth";
+import {
+  getAuth,
+  RecaptchaVerifier,
+  signInWithPhoneNumber,
+  GoogleAuthProvider,
+  signInWithPopup,
+} from "firebase/auth";
 
 const firebaseConfig = {
   apiKey: "AIzaSyC00vdY1ePvGb6eIq3GYTn9sZgHQm0lqGc",
@@ -12,8 +18,14 @@ const firebaseConfig = {
   measurementId: "G-V49H346Q22"
 };
 
-// Initialize Firebase
 const app = initializeApp(firebaseConfig);
 const auth = getAuth(app);
+const provider = new GoogleAuthProvider();
 
-export { auth, createUserWithEmailAndPassword, signInWithEmailAndPassword };
+export {
+  auth,
+  RecaptchaVerifier,
+  signInWithPhoneNumber,
+  provider,
+  signInWithPopup
+};
