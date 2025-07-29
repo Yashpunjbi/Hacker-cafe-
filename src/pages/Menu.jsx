@@ -2,6 +2,7 @@ import React, { useEffect, useState } from "react";
 import { useCart } from "../context/CartContext";
 import { db } from "../firebase";
 import { collection, getDocs } from "firebase/firestore";
+import { toast } from "react-toastify"; // ✅ toast import
 
 const Menu = () => {
   const { addToCart } = useCart();
@@ -24,6 +25,12 @@ const Menu = () => {
     fetchItems();
   }, []);
 
+  // ✅ handle cart + show toast
+  const handleAddToCart = (item) => {
+    addToCart(item);
+    toast.success("🛒 Item added to cart!");
+  };
+
   return (
     <div className="p-6">
       <h2 className="text-3xl font-bold text-center text-pink-600 mb-6">
@@ -43,7 +50,7 @@ const Menu = () => {
             <h3 className="text-xl font-semibold text-gray-800">{item.name}</h3>
             <p className="text-gray-600 mb-4">₹{item.price}</p>
             <button
-              onClick={() => addToCart(item)}
+              onClick={() => handleAddToCart(item)} // ✅ updated here
               className="bg-pink-600 text-white py-2 px-4 rounded hover:bg-pink-700 transition"
             >
               Add to Cart
