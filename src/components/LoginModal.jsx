@@ -1,47 +1,35 @@
-// src/components/LoginModal.jsx
 import React from "react";
 import { auth, provider } from "../firebase";
 import { signInWithPopup } from "firebase/auth";
-import { useNavigate } from "react-router-dom";
 
 const LoginModal = ({ onClose }) => {
-  const navigate = useNavigate();
-
   const handleGoogleLogin = async () => {
     try {
       await signInWithPopup(auth, provider);
-      onClose(); // close modal
-      navigate("/"); // go home or wherever
-    } catch (err) {
-      console.error(err);
-      alert("Login failed");
+      alert("Login successful!");
+      onClose(); // Close modal on success
+    } catch (error) {
+      console.error("Login error:", error);
+      alert("Login failed. Please try again.");
     }
   };
 
   return (
-    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-      <div className="bg-white p-6 rounded-2xl shadow-xl w-[90%] max-w-sm text-center relative">
-        <button
-          onClick={onClose}
-          className="absolute top-2 right-3 text-gray-500 text-xl hover:text-black"
-        >
-          &times;
-        </button>
-
-        <img
-          src="https://cdn-icons-png.flaticon.com/512/3075/3075977.png"
-          alt="pizza-login"
-          className="w-20 mx-auto mb-4"
-        />
-        <h2 className="text-xl font-bold mb-2 text-pink-600">Login to Hacker Cafe</h2>
-        <p className="text-sm text-gray-500 mb-4">
-          Get exclusive pizza offers and track your orders!
-        </p>
+    <div className="fixed inset-0 bg-black bg-opacity-60 flex items-center justify-center z-50">
+      <div className="bg-white rounded-xl p-6 w-[90%] max-w-md text-center shadow-2xl">
+        <h2 className="text-2xl font-bold mb-4 text-pink-600">Login to Order</h2>
+        <p className="mb-6 text-gray-600">Sign in with your Google account to continue.</p>
         <button
           onClick={handleGoogleLogin}
-          className="bg-red-500 hover:bg-red-600 text-white py-2 px-5 rounded-full w-full"
+          className="bg-pink-600 hover:bg-pink-700 text-white px-5 py-2 rounded-full w-full font-semibold transition duration-200"
         >
-          🍕 Continue with Google
+          Continue with Google
+        </button>
+        <button
+          onClick={onClose}
+          className="mt-4 text-sm text-gray-500 hover:text-pink-600"
+        >
+          Cancel
         </button>
       </div>
     </div>
