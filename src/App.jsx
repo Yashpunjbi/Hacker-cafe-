@@ -21,7 +21,10 @@ const App = () => {
             <Route path="/cart" element={<Cart />} />
             <Route path="/offers" element={<offers />} />
             <Route path="/checkout" element={<Checkout />} />
-          </Routes>
+
+  <Route path="/login" element={<Login />} />  
+
+       </Routes>
         </div>
         <BottomNav />
         <ToastContainer position="bottom-center" /> {/* ✅ Add ToastContainer */}
