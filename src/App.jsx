@@ -8,6 +8,8 @@ import Checkout from "./pages/Checkout";
 import BottomNav from "./components/BottomNav";
 import { ToastContainer } from "react-toastify"; // ✅ Import ToastContainer
 import "react-toastify/dist/ReactToastify.css";  // ✅ Import CSS
+import Login from "./pages/Login";
+
 
 const App = () => {
   return (
