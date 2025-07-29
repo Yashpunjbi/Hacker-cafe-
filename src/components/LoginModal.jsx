@@ -1,10 +1,17 @@
 // src/components/LoginModal.jsx
+
 import React, { useState } from "react";
-import { getAuth, signInWithEmailAndPassword, signInWithPopup, GoogleAuthProvider } from "firebase/auth";
-import { XMarkIcon } from "@heroicons/react/24/outline"; // Optional for close icon
+import {
+  getAuth,
+  signInWithEmailAndPassword,
+  signInWithPopup,
+  GoogleAuthProvider,
+} from "firebase/auth";
+import { XMarkIcon } from "@heroicons/react/24/outline";
+import { app } from "../firebase"; // ✅ REQUIRED for getAuth(app)
 
 const LoginModal = ({ onClose }) => {
-  const auth = getAuth();
+  const auth = getAuth(app); // ✅ use app here
   const provider = new GoogleAuthProvider();
 
   const [email, setEmail] = useState("");
@@ -22,10 +29,13 @@ const LoginModal = ({ onClose }) => {
 
   const handleGoogleLogin = async () => {
     try {
-      await signInWithPopup(auth, provider);
+      console.log("Attempting Google login...");
+      const result = await signInWithPopup(auth, provider);
+      console.log("Google login success:", result.user);
       onClose();
     } catch (err) {
-      setError(err.message);
+      console.error("Google login error:", err.code, err.message);
+      setError(err.message || "Login failed. Please try again.");
     }
   };
 
