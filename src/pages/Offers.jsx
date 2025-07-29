@@ -24,7 +24,7 @@ const Offers = () => {
         {offers.map((offer) => (
           <div key={offer.id} className="border p-4 rounded shadow">
             <img
-              src={offer.imageUrl} // 👈 Corrected from "image" to "imageUrl"
+              src={offer.image}
               alt={offer.title}
               className="w-full h-40 object-cover mb-2 rounded"
             />
