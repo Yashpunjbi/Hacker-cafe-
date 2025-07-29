@@ -1,7 +1,7 @@
 // src/pages/Login.jsx
 import React, { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
-import { auth, signInWithEmailAndPassword } from "../FirebaseAuth";
+import { auth, signInWithEmailAndPassword } from "../firebase/FirebaseAuth";
 
 const Login = () => {
   const [email, setEmail] = useState("");
