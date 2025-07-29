@@ -8,7 +8,6 @@ import Checkout from "./pages/Checkout";
 import BottomNav from "./components/BottomNav";
 import { ToastContainer } from "react-toastify"; // ✅ Import ToastContainer
 import "react-toastify/dist/ReactToastify.css";  // ✅ Import CSS
-import Login from "./pages/Login";
 
 
 const App = () => {
@@ -20,9 +19,7 @@ const App = () => {
             <Route path="/" element={<Menu />} />
             <Route path="/cart" element={<Cart />} />
             <Route path="/offers" element={<offers />} />
-            <Route path="/checkout" element={<Checkout />} />
-
-  <Route path="/login" element={<Login />} />  
+            <Route path="/checkout" element={<Checkout />} />  
 
        </Routes>
         </div>
