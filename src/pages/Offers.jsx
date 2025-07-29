@@ -1,33 +1,41 @@
-import React from "react";
-
-const deals = [
-  {
-    title: "₹29 Cheesy Pizza",
-    image: "https://source.unsplash.com/400x300/?cheese-pizza",
-    desc: "Hot & cheesy pizza at just ₹29! Limited Time Offer.",
-  },
-  {
-    title: "₹9 Cold Drink",
-    image: "https://source.unsplash.com/400x300/?cold-drinks",
-    desc: "Refresh yourself for just ₹9. Grab the deal now!",
-  },
-  {
-    title: "Combo Deal",
-    image: "https://source.unsplash.com/400x300/?combo-food",
-    desc: "Pizza + Drink Combo for just ₹35!",
-  },
-];
+// src/components/Offers.jsx
+import React, { useEffect, useState } from "react";
+import { db } from "../firebase";
+import { collection, onSnapshot } from "firebase/firestore";
 
 const Offers = () => {
+  const [offers, setOffers] = useState([]);
+
+  useEffect(() => {
+    const unsub = onSnapshot(collection(db, "offers"), (snapshot) => {
+      const data = snapshot.docs.map((doc) => ({
+        id: doc.id,
+        ...doc.data(),
+      }));
+      setOffers(data);
+    });
+
+    return () => unsub();
+  }, []);
+
   return (
-    <div className="p-4 mb-16">
-      <h2 className="text-xl font-bold mb-4 text-center text-yellow-600">🎁 Special Offers</h2>
-      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-        {deals.map((offer, idx) => (
-          <div key={idx} className="bg-white rounded shadow p-2">
-            <img src={offer.image} alt={offer.title} className="w-full h-40 object-cover rounded" />
-            <h3 className="text-lg font-semibold mt-2">{offer.title}</h3>
-            <p className="text-gray-600 text-sm">{offer.desc}</p>
+    <div className="p-4">
+      <h2 className="text-2xl font-bold mb-4 text-red-500">🔥 Today's Offers</h2>
+      <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+        {offers.map((offer) => (
+          <div
+            key={offer.id}
+            className="border rounded-lg overflow-hidden shadow hover:shadow-lg transition"
+          >
+            <img
+              src={offer.imageUrl}
+              alt={offer.title}
+              className="w-full h-40 object-cover"
+            />
+            <div className="p-3">
+              <h3 className="font-semibold text-lg">{offer.title}</h3>
+              <p className="text-green-600 font-bold text-sm">₹{offer.price}</p>
+            </div>
           </div>
         ))}
       </div>
@@ -36,4 +44,3 @@ const Offers = () => {
 };
 
 export default Offers;
-
