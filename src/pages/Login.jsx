@@ -1,15 +1,24 @@
 // src/pages/Login.jsx
 import React, { useState } from "react";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
+import { auth, signInWithEmailAndPassword } from "../firebase/FirebaseAuth";
 
 const Login = () => {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [error, setError] = useState("");
+  const navigate = useNavigate();
 
-  const handleLogin = (e) => {
+  const handleLogin = async (e) => {
     e.preventDefault();
-    // Firebase login logic will go here
-    console.log("Login", email, password);
+    setError("");
+
+    try {
+      await signInWithEmailAndPassword(auth, email, password);
+      navigate("/"); // Redirect to Menu page
+    } catch (err) {
+      setError("Invalid email or password");
+    }
   };
 
   return (
@@ -18,6 +27,9 @@ const Login = () => {
         <h2 className="text-3xl font-bold text-red-600 mb-6 text-center">
           Welcome Back to <span className="text-yellow-500">Hacker Café 🍕</span>
         </h2>
+
+        {error && <p className="text-red-500 text-sm text-center mb-4">{error}</p>}
+
         <form onSubmit={handleLogin} className="space-y-4">
           <div>
             <label className="block text-gray-700">Email</label>
@@ -48,6 +60,7 @@ const Login = () => {
             Login & Order Now 🍕
           </button>
         </form>
+
         <p className="mt-4 text-center text-sm text-gray-600">
           Don’t have an account?{" "}
           <Link to="/signup" className="text-yellow-600 font-medium hover:underline">
