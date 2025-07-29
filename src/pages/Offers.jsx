@@ -7,7 +7,7 @@ const Offers = () => {
 
   useEffect(() => {
     const fetchOffers = async () => {
-      const querySnapshot = await getDocs(collection(db, "Offers")); // Capital O here
+      const querySnapshot = await getDocs(collection(db, "offers")); // Capital O here
       const offersData = querySnapshot.docs.map((doc) => ({
         id: doc.id,
         ...doc.data(),
