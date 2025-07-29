@@ -6,6 +6,8 @@ import Cart from "./pages/Cart";
 import Offers from "./pages/Offers";
 import Checkout from "./pages/Checkout";
 import BottomNav from "./components/BottomNav";
+import { ToastContainer } from "react-toastify"; // ✅ Import ToastContainer
+import "react-toastify/dist/ReactToastify.css";  // ✅ Import CSS
 
 const App = () => {
   return (
@@ -15,12 +17,12 @@ const App = () => {
           <Routes>
             <Route path="/" element={<Menu />} />
             <Route path="/cart" element={<Cart />} />
-
-<Route path="/offers" element={<Offers />} />
+            <Route path="/offers" element={<Offers />} />
             <Route path="/checkout" element={<Checkout />} />
           </Routes>
         </div>
         <BottomNav />
+        <ToastContainer position="bottom-center" /> {/* ✅ Add ToastContainer */}
       </Router>
     </CartProvider>
   );
