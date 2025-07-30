@@ -16,27 +16,25 @@ const OrderHistory = () => {
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, async (user) => {
       if (user) {
-        console.log("✅ Logged-in user:", user.email);
         try {
           const q = query(
             collection(db, "orders"),
             where("email", "==", user.email),
-            orderBy("createdAt", "desc")
+            orderBy("createdAt", "desc") // ✅ Only if createdAt is a Firestore Timestamp
           );
-          const querySnapshot = await getDocs(q);
-          const data = querySnapshot.docs.map((doc) => ({
+          const snapshot = await getDocs(q);
+          const orderData = snapshot.docs.map((doc) => ({
             id: doc.id,
             ...doc.data(),
           }));
-          console.log("✅ Fetched orders:", data);
-          setOrders(data);
-        } catch (err) {
-          console.error("❌ Error fetching orders:", err);
+          setOrders(orderData);
+        } catch (error) {
+          console.error("Error fetching orders:", error);
+          setOrders([]); // fallback
         } finally {
           setLoading(false);
         }
       } else {
-        console.warn("⚠️ User not logged in");
         setOrders([]);
         setLoading(false);
       }
@@ -45,7 +43,7 @@ const OrderHistory = () => {
     return () => unsubscribe();
   }, []);
 
-  if (loading) return <p className="text-center p-6 text-gray-600">Loading your orders...</p>;
+  if (loading) return <p className="text-center p-6">Loading your orders...</p>;
 
   return (
     <div className="max-w-4xl mx-auto p-6">
@@ -54,9 +52,7 @@ const OrderHistory = () => {
       </h2>
 
       {orders.length === 0 ? (
-        <p className="text-center text-gray-600">
-          You have no past orders.
-        </p>
+        <p className="text-center text-gray-600">You have no past orders.</p>
       ) : (
         <div className="space-y-6">
           {orders.map((order) => (
@@ -83,7 +79,7 @@ const OrderHistory = () => {
               <div className="text-sm">
                 <p className="font-semibold mb-1 text-gray-800">Items:</p>
                 <ul className="list-disc ml-5 space-y-1 text-gray-700">
-                  {order.items?.map((item, index) => (
+                  {Array.isArray(order.items) && order.items.map((item, index) => (
                     <li key={index}>
                       {item.name} × {item.qty} = ₹{item.qty * item.price}
                     </li>
