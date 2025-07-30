@@ -11,6 +11,9 @@ import { onAuthStateChanged } from "firebase/auth";
 import { db, auth } from "../firebase";
 
 const OrderHistory = () => {
+
+<h1 className="text-5xl font-bold text-red-600">TAILWIND IS WORKING</h1>
+
   const [orders, setOrders] = useState([]);
   const [loading, setLoading] = useState(true);
   const [userEmail, setUserEmail] = useState("");
