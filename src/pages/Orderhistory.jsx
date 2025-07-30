@@ -16,6 +16,7 @@ const OrderHistory = () => {
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, async (user) => {
       if (user) {
+        console.log("✅ Logged-in user:", user.email);
         try {
           const q = query(
             collection(db, "orders"),
@@ -27,13 +28,15 @@ const OrderHistory = () => {
             id: doc.id,
             ...doc.data(),
           }));
+          console.log("✅ Fetched orders:", data);
           setOrders(data);
         } catch (err) {
-          console.error("Error fetching orders:", err);
+          console.error("❌ Error fetching orders:", err);
         } finally {
           setLoading(false);
         }
       } else {
+        console.warn("⚠️ User not logged in");
         setOrders([]);
         setLoading(false);
       }
@@ -45,7 +48,7 @@ const OrderHistory = () => {
   if (loading) return <p className="text-center p-6">Loading your orders...</p>;
 
   return (
-    <div className="max-w-4xl mx-auto p-6">
+    <div className="max-w-4xl mx-auto p-6 bg-white min-h-screen">
       <h2 className="text-3xl font-bold text-pink-600 mb-8 text-center">
         Your Orders
       </h2>
