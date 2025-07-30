@@ -1,16 +1,28 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { Link, useLocation } from "react-router-dom";
+import { getAuth, onAuthStateChanged } from "firebase/auth";
 import LoginModal from "./LoginModal";
+import UserMenu from "./UserMenu";
 
 const Navbar = () => {
   const { pathname } = useLocation();
   const [isLoginOpen, setIsLoginOpen] = useState(false);
+  const [user, setUser] = useState(null);
+  const [showUserMenu, setShowUserMenu] = useState(false);
 
   const navItems = [
     { name: "Home", path: "/", icon: "🏠" },
     { name: "Offers", path: "/offers", icon: "🎁" },
     { name: "Cart", path: "/cart", icon: "🛒" },
   ];
+
+  useEffect(() => {
+    const auth = getAuth();
+    const unsubscribe = onAuthStateChanged(auth, (currentUser) => {
+      setUser(currentUser);
+    });
+    return () => unsubscribe();
+  }, []);
 
   return (
     <>
@@ -28,17 +40,32 @@ const Navbar = () => {
           </Link>
         ))}
 
-        {/* Login Button */}
-        <button
-          onClick={() => setIsLoginOpen(true)}
-          className="flex flex-col items-center text-sm text-gray-500"
-        >
-          <span className="text-xl">🔐</span>
-          Login
-        </button>
+        {/* Profile or Login */}
+        {user ? (
+          <div className="relative">
+            <button
+              onClick={() => setShowUserMenu(!showUserMenu)}
+              className="flex flex-col items-center text-sm text-gray-700"
+            >
+              <span className="text-xl">👤</span>
+              Profile
+            </button>
+            {showUserMenu && (
+              <UserMenu user={user} onLogout={() => setShowUserMenu(false)} />
+            )}
+          </div>
+        ) : (
+          <button
+            onClick={() => setIsLoginOpen(true)}
+            className="flex flex-col items-center text-sm text-gray-500"
+          >
+            <span className="text-xl">🔐</span>
+            Login
+          </button>
+        )}
       </nav>
 
-      {/* Login Modal Trigger */}
+      {/* Login Modal */}
       {isLoginOpen && <LoginModal onClose={() => setIsLoginOpen(false)} />}
     </>
   );
