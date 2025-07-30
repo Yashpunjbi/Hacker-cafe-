@@ -1,40 +1,40 @@
+// src/pages/OrderHistory.jsx
+
 import React, { useEffect, useState } from "react";
-import {
-  collection,
-  query,
-  where,
-  getDocs,
-  orderBy,
-} from "firebase/firestore";
+import { collection, query, where, getDocs, orderBy } from "firebase/firestore";
 import { onAuthStateChanged } from "firebase/auth";
 import { db, auth } from "../firebase";
 
 const OrderHistory = () => {
   const [orders, setOrders] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [userEmail, setUserEmail] = useState("");
 
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, async (user) => {
       if (user) {
+        const email = user.email;
+        setUserEmail(email);
+
         try {
           const q = query(
             collection(db, "orders"),
-            where("email", "==", user.email),
-            orderBy("createdAt", "desc") // ✅ Only if createdAt is a Firestore Timestamp
+            where("email", "==", email),
+            orderBy("createdAt", "desc")
           );
-          const snapshot = await getDocs(q);
-          const orderData = snapshot.docs.map((doc) => ({
+          const querySnapshot = await getDocs(q);
+          const data = querySnapshot.docs.map((doc) => ({
             id: doc.id,
             ...doc.data(),
           }));
-          setOrders(orderData);
-        } catch (error) {
-          console.error("Error fetching orders:", error);
-          setOrders([]); // fallback
+          setOrders(data);
+        } catch (err) {
+          console.error("Error fetching orders:", err);
         } finally {
           setLoading(false);
         }
       } else {
+        setUserEmail("");
         setOrders([]);
         setLoading(false);
       }
@@ -43,49 +43,44 @@ const OrderHistory = () => {
     return () => unsubscribe();
   }, []);
 
-  if (loading) return <p className="text-center p-6">Loading your orders...</p>;
+  if (loading) return <p className="text-center p-4">Loading your orders...</p>;
 
   return (
-    <div className="max-w-4xl mx-auto p-6">
-      <h2 className="text-3xl font-bold text-pink-600 mb-8 text-center">
-        Your Orders
+    <div className="max-w-3xl mx-auto p-6">
+      <h2 className="text-2xl font-bold text-pink-600 mb-6 text-center">
+        Your Order History
       </h2>
 
       {orders.length === 0 ? (
-        <p className="text-center text-gray-600">You have no past orders.</p>
+        <p className="text-center text-gray-500">You have no past orders.</p>
       ) : (
         <div className="space-y-6">
           {orders.map((order) => (
-            <div
-              key={order.id}
-              className="bg-white p-5 rounded-xl shadow-md border border-gray-200"
-            >
-              <div className="flex justify-between items-center mb-3">
-                <h3 className="font-bold text-lg text-gray-800">
-                  Order #{order.id.slice(-6)}
-                </h3>
-                <span className="text-sm text-blue-600 font-medium capitalize">
-                  {order.status || "Placed"}
-                </span>
+            <div key={order.id} className="border p-4 rounded shadow-sm bg-white">
+              <div className="flex justify-between items-center mb-2">
+                <h3 className="font-bold text-lg">Order #{order.id.slice(-6)}</h3>
+                <span className="text-sm text-gray-500">{order.status}</span>
               </div>
+              <p className="text-gray-700 mb-1">
+                <strong>Name:</strong> {order.name}
+              </p>
+              <p className="text-gray-700 mb-1">
+                <strong>Phone:</strong> {order.phone}
+              </p>
+              <p className="text-gray-700 mb-1">
+                <strong>Address:</strong> {order.address}
+              </p>
+              <p className="text-gray-700 mb-2">
+                <strong>Total:</strong> ₹{order.total}
+              </p>
 
-              <div className="text-sm text-gray-700 space-y-1 mb-4">
-                <p><strong>Name:</strong> {order.name}</p>
-                <p><strong>Phone:</strong> {order.phone}</p>
-                <p><strong>Address:</strong> {order.address}</p>
-                <p><strong>Total:</strong> ₹{order.total}</p>
-              </div>
-
-              <div className="text-sm">
-                <p className="font-semibold mb-1 text-gray-800">Items:</p>
-                <ul className="list-disc ml-5 space-y-1 text-gray-700">
-                  {Array.isArray(order.items) && order.items.map((item, index) => (
-                    <li key={index}>
-                      {item.name} × {item.qty} = ₹{item.qty * item.price}
-                    </li>
-                  ))}
-                </ul>
-              </div>
+              <ul className="pl-4 list-disc text-sm text-gray-700">
+                {order.cart && order.cart.map((item, index) => (
+                  <li key={index}>
+                    {item.name} × {item.qty} = ₹{item.price * item.qty}
+                  </li>
+                ))}
+              </ul>
             </div>
           ))}
         </div>
