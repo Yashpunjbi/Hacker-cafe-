@@ -1,5 +1,5 @@
 // src/pages/OrderHistory.jsx
-
+<h1 className="text-5xl font-bold text-red-500">TESTING ORDER HISTORY</h1>
 import React, { useEffect, useState } from "react";
 import {
   collection,
