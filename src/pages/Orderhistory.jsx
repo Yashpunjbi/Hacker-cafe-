@@ -1,62 +1,109 @@
+// src/pages/OrderHistory.jsx
+
 import React, { useEffect, useState } from "react";
-import { db } from "../firebase";
-import { collection, query, where, getDocs } from "firebase/firestore";
-import { getAuth } from "firebase/auth";
+import {
+  collection,
+  query,
+  where,
+  getDocs,
+  orderBy,
+} from "firebase/firestore";
+import { onAuthStateChanged } from "firebase/auth";
+import { db, auth } from "../firebase";
 
 const OrderHistory = () => {
   const [orders, setOrders] = useState([]);
-  const auth = getAuth();
-  const user = auth.currentUser;
+  const [loading, setLoading] = useState(true);
+  const [userEmail, setUserEmail] = useState("");
 
   useEffect(() => {
-    const fetchOrders = async () => {
-      if (!user) return;
+    const unsubscribe = onAuthStateChanged(auth, async (user) => {
+      if (user) {
+        const email = user.email;
+        setUserEmail(email);
 
-      const q = query(
-        collection(db, "orders"),
-        where("email", "==", user.email)
-      );
-      const querySnapshot = await getDocs(q);
-      const fetchedOrders = [];
-      querySnapshot.forEach((doc) => {
-        fetchedOrders.push({ id: doc.id, ...doc.data() });
-      });
-      setOrders(fetchedOrders);
-    };
+        try {
+          const q = query(
+            collection(db, "orders"),
+            where("email", "==", email),
+            orderBy("createdAt", "desc")
+          );
+          const querySnapshot = await getDocs(q);
+          const data = querySnapshot.docs.map((doc) => ({
+            id: doc.id,
+            ...doc.data(),
+          }));
+          setOrders(data);
+        } catch (err) {
+          console.error("Error fetching orders:", err);
+        } finally {
+          setLoading(false);
+        }
+      } else {
+        setUserEmail("");
+        setOrders([]);
+        setLoading(false);
+      }
+    });
 
-    fetchOrders();
-  }, [user]);
+    return () => unsubscribe();
+  }, []);
+
+  if (loading) return <p className="text-center p-6">Loading your orders...</p>;
 
   return (
-    <div className="p-4">
-      <h2 className="text-2xl font-bold mb-4 text-center">Your Order History</h2>
+    <div className="max-w-4xl mx-auto p-6">
+      <h2 className="text-3xl font-bold text-pink-600 mb-8 text-center">
+        Your Orders
+      </h2>
 
       {orders.length === 0 ? (
-        <p className="text-center text-gray-500">No orders found.</p>
+        <p className="text-center text-gray-500 dark:text-gray-400">
+          You have no past orders.
+        </p>
       ) : (
-        <div className="space-y-4">
+        <div className="space-y-6">
           {orders.map((order) => (
             <div
               key={order.id}
-              className="bg-white dark:bg-gray-800 shadow-md rounded-lg p-4 border border-gray-200 dark:border-gray-700"
+              className="bg-white dark:bg-gray-800 p-5 rounded-xl shadow-md border border-gray-200 dark:border-gray-700"
             >
-              <p className="text-gray-700 dark:text-gray-300">
-                <strong className="text-black dark:text-white">Order ID:</strong> {order.id}
-              </p>
-              <p className="text-gray-700 dark:text-gray-300">
-                <strong className="text-black dark:text-white">Status:</strong> {order.status}
-              </p>
-              <p className="text-gray-700 dark:text-gray-300">
-                <strong className="text-black dark:text-white">Items:</strong>{" "}
-                {order.cart?.map((item) => `${item.name} x${item.quantity}`).join(", ")}
-              </p>
-              <p className="text-gray-700 dark:text-gray-300">
-                <strong className="text-black dark:text-white">Total:</strong> ₹{order.total}
-              </p>
-              <p className="text-gray-700 dark:text-gray-300">
-                <strong className="text-black dark:text-white">Placed on:</strong>{" "}
-                {order.createdAt ? new Date(order.createdAt.seconds * 1000).toLocaleString() : "N/A"}
-              </p>
+              <div className="flex justify-between items-center mb-3">
+                <h3 className="font-bold text-lg">
+                  Order #{order.id.slice(-6)}
+                </h3>
+                <span className="text-sm text-blue-600 dark:text-blue-400 font-medium capitalize">
+                  {order.status || "Placed"}
+                </span>
+              </div>
+
+              <div className="text-sm text-gray-700 dark:text-gray-300 space-y-1 mb-4">
+                <p>
+                  <strong>Name:</strong> {order.name}
+                </p>
+                <p>
+                  <strong>Phone:</strong> {order.phone}
+                </p>
+                <p>
+                  <strong>Address:</strong> {order.address}
+                </p>
+                <p>
+                  <strong>Total:</strong> ₹{order.total}
+                </p>
+              </div>
+
+              <div className="text-sm">
+                <p className="font-semibold mb-1 text-gray-800 dark:text-gray-200">
+                  Items:
+                </p>
+                <ul className="list-disc ml-5 space-y-1 text-gray-700 dark:text-gray-300">
+                  {order.items?.map((item, index) => (
+                    <li key={index}>
+                      {item.name} × {item.qty} = ₹{item.qty * item.price}
+                    </li>
+                  ))}
+                </ul>
+              </div>
             </div>
           ))}
         </div>
