@@ -75,7 +75,7 @@ const OrderHistory = () => {
               </p>
 
               <ul className="pl-4 list-disc text-sm text-gray-700">
-                {order.items.map((item, index) => (
+                {order.cart && order.cart.map((item, index) => (
                   <li key={index}>
                     {item.name} × {item.qty} = ₹{item.price * item.qty}
                   </li>
