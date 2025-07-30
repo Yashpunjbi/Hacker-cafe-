@@ -1,7 +1,10 @@
-import React, { useState } from "react";
+// src/pages/Checkout.jsx
+
+import React, { useState, useEffect } from "react";
 import { useCart } from "../context/CartContext";
-import { db } from "../firebase"; // Make sure firebase.js is setup
+import { db, auth } from "../firebase"; // Make sure firebase.js is setup
 import { collection, addDoc, Timestamp } from "firebase/firestore";
+import { onAuthStateChanged } from "firebase/auth";
 import { useNavigate } from "react-router-dom";
 
 const Checkout = () => {
@@ -9,9 +12,19 @@ const Checkout = () => {
   const [name, setName] = useState("");
   const [address, setAddress] = useState("");
   const [phone, setPhone] = useState("");
+  const [email, setEmail] = useState("");
   const navigate = useNavigate();
 
   const total = cart.reduce((acc, item) => acc + item.price * item.qty, 0);
+
+  useEffect(() => {
+    const unsubscribe = onAuthStateChanged(auth, (user) => {
+      if (user) {
+        setEmail(user.email); // ✅ Store logged-in user's email
+      }
+    });
+    return () => unsubscribe();
+  }, []);
 
   const handleOrder = async (e) => {
     e.preventDefault();
@@ -25,6 +38,7 @@ const Checkout = () => {
       name,
       address,
       phone,
+      email, // ✅ Important for order history
       items: cart,
       total,
       status: "Pending",
@@ -35,7 +49,7 @@ const Checkout = () => {
       await addDoc(collection(db, "orders"), orderData);
       clearCart();
       alert("Order placed successfully!");
-      navigate("/"); // back to home
+      navigate("/"); // Redirect to home
     } catch (err) {
       console.error("Error placing order:", err);
       alert("Something went wrong!");
@@ -68,6 +82,7 @@ const Checkout = () => {
           value={phone}
           onChange={(e) => setPhone(e.target.value)}
         />
+
         <button
           type="submit"
           className="w-full bg-pink-600 text-white p-2 rounded"
