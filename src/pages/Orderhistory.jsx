@@ -1,88 +1,65 @@
 import React, { useEffect, useState } from "react";
-import { collection, query, where, onSnapshot } from "firebase/firestore";
-import { auth, db } from "../firebase"; // make sure this is correctly imported
-import { onAuthStateChanged } from "firebase/auth";
+import { db } from "../firebase";
+import { collection, query, where, getDocs } from "firebase/firestore";
+import { getAuth } from "firebase/auth";
 
 const OrderHistory = () => {
   const [orders, setOrders] = useState([]);
-  const [userEmail, setUserEmail] = useState("");
+  const auth = getAuth();
+  const user = auth.currentUser;
 
   useEffect(() => {
-    const unsubscribeAuth = onAuthStateChanged(auth, (user) => {
-      if (user) {
-        setUserEmail(user.email);
-        const q = query(
-          collection(db, "orders"),
-          where("email", "==", user.email)
-        );
+    const fetchOrders = async () => {
+      if (!user) return;
 
-        const unsubscribeOrders = onSnapshot(q, (snapshot) => {
-          const data = snapshot.docs.map((doc) => ({
-            id: doc.id,
-            ...doc.data(),
-          }));
-          setOrders(data);
-        });
+      const q = query(
+        collection(db, "orders"),
+        where("email", "==", user.email)
+      );
+      const querySnapshot = await getDocs(q);
+      const fetchedOrders = [];
+      querySnapshot.forEach((doc) => {
+        fetchedOrders.push({ id: doc.id, ...doc.data() });
+      });
+      setOrders(fetchedOrders);
+    };
 
-        return () => unsubscribeOrders();
-      }
-    });
-
-    return () => unsubscribeAuth();
-  }, []);
+    fetchOrders();
+  }, [user]);
 
   return (
-    <div className="p-4 max-w-3xl mx-auto">
-      <h2 className="text-2xl font-bold mb-4 text-center">🧾 Order History</h2>
+    <div className="p-4">
+      <h2 className="text-2xl font-bold mb-4 text-center">Your Order History</h2>
 
       {orders.length === 0 ? (
         <p className="text-center text-gray-500">No orders found.</p>
       ) : (
-        orders.map((order) => (
-          <div
-            key={order.id}
-            className="bg-white rounded-xl shadow-md p-4 mb-4 border border-gray-200"
-          >
-            <div className="flex justify-between items-center mb-2">
-              <span className="text-sm text-gray-600">
-                Order ID: <strong>{order.id}</strong>
-              </span>
-              <span
-                className={`text-sm px-2 py-1 rounded ${
-                  order.status === "cancelled"
-                    ? "bg-red-100 text-red-600"
-                    : "bg-green-100 text-green-600"
-                }`}
-              >
-                {order.status}
-              </span>
+        <div className="space-y-4">
+          {orders.map((order) => (
+            <div
+              key={order.id}
+              className="bg-white dark:bg-gray-800 shadow-md rounded-lg p-4 border border-gray-200 dark:border-gray-700"
+            >
+              <p className="text-gray-700 dark:text-gray-300">
+                <strong className="text-black dark:text-white">Order ID:</strong> {order.id}
+              </p>
+              <p className="text-gray-700 dark:text-gray-300">
+                <strong className="text-black dark:text-white">Status:</strong> {order.status}
+              </p>
+              <p className="text-gray-700 dark:text-gray-300">
+                <strong className="text-black dark:text-white">Items:</strong>{" "}
+                {order.cart?.map((item) => `${item.name} x${item.quantity}`).join(", ")}
+              </p>
+              <p className="text-gray-700 dark:text-gray-300">
+                <strong className="text-black dark:text-white">Total:</strong> ₹{order.total}
+              </p>
+              <p className="text-gray-700 dark:text-gray-300">
+                <strong className="text-black dark:text-white">Placed on:</strong>{" "}
+                {order.createdAt ? new Date(order.createdAt.seconds * 1000).toLocaleString() : "N/A"}
+              </p>
             </div>
-
-            <div className="text-sm text-gray-500 mb-2">
-              Date: {order.createdAt}
-            </div>
-
-            {order.items.map((item, idx) => (
-              <div key={idx} className="flex items-center mb-2">
-                <img
-                  src={item.image}
-                  alt={item.name}
-                  className="w-12 h-12 rounded object-cover mr-3"
-                />
-                <div>
-                  <p className="font-medium">{item.name}</p>
-                  <p className="text-sm text-gray-500">
-                    ₹{item.price} x {item.qty}
-                  </p>
-                </div>
-              </div>
-            ))}
-
-            <div className="text-right mt-2 font-bold">
-              Total: ₹{order.total}
-            </div>
-          </div>
-        ))
+          ))}
+        </div>
       )}
     </div>
   );
