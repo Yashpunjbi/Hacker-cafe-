@@ -45,10 +45,10 @@ const OrderHistory = () => {
     return () => unsubscribe();
   }, []);
 
-  if (loading) return <p className="text-center p-6">Loading your orders...</p>;
+  if (loading) return <p className="text-center p-6 text-gray-600">Loading your orders...</p>;
 
   return (
-    <div className="max-w-4xl mx-auto p-6 bg-white min-h-screen">
+    <div className="max-w-4xl mx-auto p-6">
       <h2 className="text-3xl font-bold text-pink-600 mb-8 text-center">
         Your Orders
       </h2>
