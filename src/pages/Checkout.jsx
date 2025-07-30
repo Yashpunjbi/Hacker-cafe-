@@ -1,9 +1,7 @@
-// src/pages/Checkout.jsx
-
 import React, { useState, useEffect } from "react";
 import { useCart } from "../context/CartContext";
-import { db, auth } from "../firebase"; // Make sure firebase.js is setup
-import { collection, addDoc, Timestamp } from "firebase/firestore";
+import { db, auth } from "../firebase";
+import { collection, addDoc, serverTimestamp } from "firebase/firestore"; // ✅ serverTimestamp used
 import { onAuthStateChanged } from "firebase/auth";
 import { useNavigate } from "react-router-dom";
 
@@ -20,7 +18,7 @@ const Checkout = () => {
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, (user) => {
       if (user) {
-        setEmail(user.email); // ✅ Store logged-in user's email
+        setEmail(user.email); // ✅ Logged-in user email
       }
     });
     return () => unsubscribe();
@@ -38,11 +36,11 @@ const Checkout = () => {
       name,
       address,
       phone,
-      email, // ✅ Important for order history
+      email,
       items: cart,
       total,
-      status: "Pending",
-      createdAt: Timestamp.now(),
+      status: "Placed",
+      createdAt: serverTimestamp(), // ✅ Use serverTimestamp instead of Timestamp.now()
     };
 
     try {
