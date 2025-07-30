@@ -1,95 +1,93 @@
 import React, { useEffect, useState } from "react";
-import {
-  collection,
-  query,
-  where,
-  getDocs,
-  orderBy,
-} from "firebase/firestore";
-import { onAuthStateChanged } from "firebase/auth";
 import { db, auth } from "../firebase";
+import { collection, query, where, orderBy, onSnapshot } from "firebase/firestore";
+import { onAuthStateChanged } from "firebase/auth";
 
 const OrderHistory = () => {
   const [orders, setOrders] = useState([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    const unsubscribe = onAuthStateChanged(auth, async (user) => {
-      if (user) {
-        try {
+    let unsubscribe;
+
+    const fetchOrders = async () => {
+      onAuthStateChanged(auth, (user) => {
+        if (user) {
           const q = query(
             collection(db, "orders"),
             where("email", "==", user.email),
-            orderBy("createdAt", "desc") // ✅ Only if createdAt is a Firestore Timestamp
+            orderBy("createdAt", "desc")
           );
-          const snapshot = await getDocs(q);
-          const orderData = snapshot.docs.map((doc) => ({
-            id: doc.id,
-            ...doc.data(),
-          }));
-          setOrders(orderData);
-        } catch (error) {
-          console.error("Error fetching orders:", error);
-          setOrders([]); // fallback
-        } finally {
+
+          unsubscribe = onSnapshot(q, (snapshot) => {
+            const data = snapshot.docs.map((doc) => ({
+              id: doc.id,
+              ...doc.data(),
+            }));
+            setOrders(data);
+            setLoading(false);
+          });
+        } else {
+          setOrders([]);
           setLoading(false);
         }
-      } else {
-        setOrders([]);
-        setLoading(false);
-      }
-    });
+      });
+    };
 
-    return () => unsubscribe();
+    fetchOrders();
+
+    return () => {
+      if (unsubscribe) unsubscribe();
+    };
   }, []);
 
-  if (loading) return <p className="text-center p-6">Loading your orders...</p>;
+  if (loading) {
+    return (
+      <div className="text-center mt-10 text-gray-600 font-medium text-lg">
+        Loading your orders...
+      </div>
+    );
+  }
+
+  if (orders.length === 0) {
+    return (
+      <div className="text-center mt-10 text-gray-600 font-medium text-lg">
+        No orders found.
+      </div>
+    );
+  }
 
   return (
-    <div className="max-w-4xl mx-auto p-6">
-      <h2 className="text-3xl font-bold text-pink-600 mb-8 text-center">
-        Your Orders
-      </h2>
+    <div className="max-w-3xl mx-auto p-6 mt-6">
+      <h2 className="text-2xl font-bold mb-6 text-pink-600 text-center">Your Order History</h2>
+      {orders.map((order) => (
+        <div key={order.id} className="border rounded-md p-4 mb-6 shadow-sm bg-white">
+          <p className="text-sm text-gray-500 mb-1">
+            <strong>Date:</strong>{" "}
+            {order.createdAt?.toDate().toLocaleString() || "N/A"}
+          </p>
+          <p className="text-sm text-gray-500 mb-1">
+            <strong>Order ID:</strong> {order.id}
+          </p>
+          <p className="text-sm text-gray-500 mb-1">
+            <strong>Status:</strong> {order.status}
+          </p>
+          <p className="text-sm text-gray-500 mb-2">
+            <strong>Total:</strong> ₹{order.total}
+          </p>
 
-      {orders.length === 0 ? (
-        <p className="text-center text-gray-600">You have no past orders.</p>
-      ) : (
-        <div className="space-y-6">
-          {orders.map((order) => (
-            <div
-              key={order.id}
-              className="bg-white p-5 rounded-xl shadow-md border border-gray-200"
-            >
-              <div className="flex justify-between items-center mb-3">
-                <h3 className="font-bold text-lg text-gray-800">
-                  Order #{order.id.slice(-6)}
-                </h3>
-                <span className="text-sm text-blue-600 font-medium capitalize">
-                  {order.status || "Placed"}
-                </span>
-              </div>
-
-              <div className="text-sm text-gray-700 space-y-1 mb-4">
-                <p><strong>Name:</strong> {order.name}</p>
-                <p><strong>Phone:</strong> {order.phone}</p>
-                <p><strong>Address:</strong> {order.address}</p>
-                <p><strong>Total:</strong> ₹{order.total}</p>
-              </div>
-
-              <div className="text-sm">
-                <p className="font-semibold mb-1 text-gray-800">Items:</p>
-                <ul className="list-disc ml-5 space-y-1 text-gray-700">
-                  {Array.isArray(order.items) && order.items.map((item, index) => (
-                    <li key={index}>
-                      {item.name} × {item.qty} = ₹{item.qty * item.price}
-                    </li>
-                  ))}
-                </ul>
-              </div>
-            </div>
-          ))}
+          <div className="mt-2">
+            <p className="font-semibold text-gray-700">Items:</p>
+            <ul className="pl-4 list-disc text-sm">
+              {order.items.map((item, index) => (
+                <li key={index}>
+                  {item.name} × {item.qty} — ₹{item.price}
+                </li>
+              ))}
+            </ul>
+          </div>
         </div>
-      )}
+      ))}
     </div>
   );
 };
