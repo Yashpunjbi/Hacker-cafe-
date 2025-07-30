@@ -1,7 +1,10 @@
 import React from "react";
 import { getAuth, signOut } from "firebase/auth";
+import { useNavigate } from "react-router-dom";
 
 const UserMenu = ({ user, onLogout }) => {
+  const navigate = useNavigate();
+
   const handleLogout = async () => {
     const auth = getAuth();
     await signOut(auth);
@@ -15,10 +18,30 @@ const UserMenu = ({ user, onLogout }) => {
         <p className="font-medium">{user.email}</p>
       </div>
       <ul className="text-sm">
-        <li className="px-4 py-2 hover:bg-gray-100 cursor-pointer">📦 Order History</li>
-        <li className="px-4 py-2 hover:bg-gray-100 cursor-pointer">🚚 Track Orders</li>
-        <li className="px-4 py-2 hover:bg-gray-100 cursor-pointer">📞 Contact Us</li>
-        <li className="px-4 py-2 hover:bg-gray-100 cursor-pointer">📜 Terms & Conditions</li>
+        <li
+          onClick={() => navigate("/orders")}
+          className="px-4 py-2 hover:bg-gray-100 cursor-pointer"
+        >
+          📦 Order History
+        </li>
+        <li
+          onClick={() => navigate("/track")}
+          className="px-4 py-2 hover:bg-gray-100 cursor-pointer"
+        >
+          🚚 Track Orders
+        </li>
+        <li
+          onClick={() => navigate("/contact")}
+          className="px-4 py-2 hover:bg-gray-100 cursor-pointer"
+        >
+          📞 Contact Us
+        </li>
+        <li
+          onClick={() => navigate("/terms")}
+          className="px-4 py-2 hover:bg-gray-100 cursor-pointer"
+        >
+          📜 Terms & Conditions
+        </li>
       </ul>
       <div className="border-t px-4 py-2">
         <button
