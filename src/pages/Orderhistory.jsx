@@ -1,5 +1,4 @@
 // src/pages/OrderHistory.jsx
-<h1 className="text-5xl font-bold text-red-600">TAILWIND IS WORKING</h1>
 import React, { useEffect, useState } from "react";
 import {
   collection,
