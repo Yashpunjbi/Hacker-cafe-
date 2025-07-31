@@ -5,10 +5,10 @@ import Menu from "./pages/Menu";
 import Cart from "./pages/Cart";
 import Offers from "./pages/Offers";
 import Checkout from "./pages/Checkout";
-import Orders from "./pages/Orders";      // ✅ Import Order History
-import Track from "./pages/Track";        // ✅ Import Track Orders
-import Contact from "./pages/Contact";    // ✅ Import Contact Us
-import Terms from "./pages/Terms";        // ✅ Import Terms & Conditions
+import OrderHistory from "./pages/OrderHistory";  // ✅ Corrected import
+import Track from "./pages/Track";
+import Contact from "./pages/Contact";
+import Terms from "./pages/Terms";
 import Navbar from "./components/Navbar";
 import { ToastContainer } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
@@ -17,16 +17,16 @@ const App = () => {
   return (
     <CartProvider>
       <Router>
-        <div className="pb-20"> {/* Space for BottomNav */}
+        <div className="pb-20">
           <Routes>
             <Route path="/" element={<Menu />} />
             <Route path="/cart" element={<Cart />} />
-            <Route path="/offers" element={<Offers />} />     {/* ✅ Fixed Offers import */}
+            <Route path="/offers" element={<Offers />} />
             <Route path="/checkout" element={<Checkout />} />
-            <Route path="/orders" element={<Orders />} />     {/* ✅ Order History */}
-            <Route path="/track/:id" element={<Track />} />       {/* ✅ Track Orders */}
-            <Route path="/contact" element={<Contact />} />   {/* ✅ Contact Us */}
-            <Route path="/terms" element={<Terms />} />       {/* ✅ Terms & Conditions */}
+            <Route path="/orders" element={<OrderHistory />} /> {/* ✅ Fixed */}
+            <Route path="/track/:id" element={<Track />} />
+            <Route path="/contact" element={<Contact />} />
+            <Route path="/terms" element={<Terms />} />
           </Routes>
         </div>
         <Navbar />
