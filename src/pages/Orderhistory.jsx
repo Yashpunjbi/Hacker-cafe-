@@ -1,17 +1,16 @@
+// src/pages/Orders.jsx or OrderHistory.jsx
 import React, { useEffect, useState } from "react";
+import { auth, db } from "../firebase";
 import { collection, query, where, getDocs } from "firebase/firestore";
-import { db, auth } from "../firebase";
 import { onAuthStateChanged } from "firebase/auth";
-import { Link } from "react-router-dom";
 
-const OrderHistory = () => {
+const Orders = () => {
   const [orders, setOrders] = useState([]);
-  const [userEmail, setUserEmail] = useState("");
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    const unsubscribe = onAuthStateChanged(auth, async (user) => {
+    onAuthStateChanged(auth, async (user) => {
       if (user) {
-        setUserEmail(user.email);
         const q = query(
           collection(db, "orders"),
           where("email", "==", user.email)
@@ -22,35 +21,32 @@ const OrderHistory = () => {
           ...doc.data(),
         }));
         setOrders(data);
+        setLoading(false);
+      } else {
+        setOrders([]);
+        setLoading(false);
       }
     });
-
-    return () => unsubscribe();
   }, []);
 
+  if (loading) return <p className="text-center mt-10">Loading orders...</p>;
+
   return (
-    <div className="p-5 max-w-2xl mx-auto">
-      <h1 className="text-2xl font-bold mb-4">🧾 Order History</h1>
+    <div className="p-4">
+      <h2 className="text-2xl font-bold mb-4">Your Orders</h2>
       {orders.length === 0 ? (
-        <p>No orders yet!</p>
+        <p>No orders found.</p>
       ) : (
         <ul className="space-y-4">
           {orders.map((order) => (
             <li
               key={order.id}
-              className="border p-4 rounded shadow-sm flex justify-between items-center"
+              className="border p-4 rounded shadow bg-white dark:bg-gray-800"
             >
-              <div>
-                <p className="font-semibold">Order ID: {order.id}</p>
-                <p>Status: <span className="capitalize">{order.status}</span></p>
-                <p>Total: ₹{order.total}</p>
-              </div>
-              <Link
-                to={`/track/${order.id}`}
-                className="text-blue-600 underline"
-              >
-                Track →
-              </Link>
+              <p><strong>Order ID:</strong> {order.id}</p>
+              <p><strong>Status:</strong> {order.status}</p>
+              <p><strong>Total:</strong> ₹{order.total}</p>
+              <p><strong>Date:</strong> {new Date(order.timestamp?.toDate()).toLocaleString()}</p>
             </li>
           ))}
         </ul>
@@ -59,4 +55,4 @@ const OrderHistory = () => {
   );
 };
 
-export default OrderHistory;
+export default Orders;
