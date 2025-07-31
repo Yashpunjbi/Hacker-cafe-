@@ -21,7 +21,6 @@ const OrderHistory = () => {
         if (user) {
           const ordersRef = collection(db, "orders");
 
-          // 🛠️ Some documents may not have createdAt - so fallback to basic query
           try {
             const q = query(
               ordersRef,
@@ -85,7 +84,7 @@ const OrderHistory = () => {
             <strong>Date:</strong>{" "}
             {order.createdAt?.toDate
               ? order.createdAt.toDate().toLocaleString()
-              : "Not available"}
+              : order.createdAt || "Not available"}
           </p>
           <p className="text-sm text-gray-500 mb-1">
             <strong>Order ID:</strong> {order.id}
