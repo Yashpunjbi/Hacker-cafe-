@@ -1,79 +1,66 @@
 // src/pages/Track.jsx
 import React, { useEffect, useState } from "react";
+import { useParams } from "react-router-dom";
 import { db } from "../firebase";
-import { doc, onSnapshot } from "firebase/firestore";
-import { useAuth } from "../context/AuthContext";
-
-const steps = ["placed", "preparing", "out for delivery", "delivered"];
+import { doc, getDoc } from "firebase/firestore";
 
 const Track = () => {
-  const { currentUser } = useAuth();
-  const [latestOrder, setLatestOrder] = useState(null);
+  const { id } = useParams();
+  const [order, setOrder] = useState(null);
+
+  const steps = [
+    { key: "placed", label: "Order Placed", color: "bg-yellow-400" },
+    { key: "preparing", label: "Preparing", color: "bg-orange-400" },
+    { key: "ontheway", label: "On the Way", color: "bg-purple-500" },
+    { key: "delivered", label: "Delivered", color: "bg-green-500" },
+  ];
 
   useEffect(() => {
-    if (!currentUser) return;
-
-    const unsubscribe = onSnapshot(doc(db, "users", currentUser.uid), (userDoc) => {
-      const orderId = userDoc.data()?.latestOrderId;
-
-      if (orderId) {
-        const orderRef = doc(db, "orders", orderId);
-        onSnapshot(orderRef, (orderDoc) => {
-          if (orderDoc.exists()) {
-            setLatestOrder({ id: orderDoc.id, ...orderDoc.data() });
-          }
-        });
+    const fetchOrder = async () => {
+      const orderRef = doc(db, "orders", id);
+      const orderSnap = await getDoc(orderRef);
+      if (orderSnap.exists()) {
+        setOrder(orderSnap.data());
       }
-    });
+    };
+    fetchOrder();
+  }, [id]);
 
-    return () => unsubscribe();
-  }, [currentUser]);
-
-  const getStatusIndex = (status) => steps.indexOf(status?.toLowerCase());
+  const getStepIndex = () =>
+    steps.findIndex((step) => step.key === order?.status) || 0;
 
   return (
-    <div className="p-6 max-w-2xl mx-auto">
-      <h2 className="text-2xl font-bold mb-6">📦 Track Your Order</h2>
+    <div className="max-w-xl mx-auto p-6">
+      <h2 className="text-2xl font-bold mb-6 text-center">📍 Track Your Order</h2>
 
-      {!latestOrder ? (
-        <p className="text-gray-500">No recent order found.</p>
+      {!order ? (
+        <p className="text-center text-gray-500">Loading order status...</p>
       ) : (
-        <div className="space-y-4">
-          <p>
-            <strong>Order ID:</strong> {latestOrder.id}
-          </p>
-          <p>
-            <strong>Status:</strong>{" "}
-            <span className="capitalize text-blue-600 font-semibold">
-              {latestOrder.status}
-            </span>
-          </p>
-
-          <div className="mt-6">
-            <div className="flex justify-between items-center text-sm font-medium text-gray-600">
-              {steps.map((step, i) => (
-                <div key={i} className="flex-1 text-center">
-                  <div
-                    className={`w-10 h-10 mx-auto rounded-full flex items-center justify-center ${
-                      i <= getStatusIndex(latestOrder.status)
-                        ? "bg-green-500 text-white"
-                        : "bg-gray-300 text-gray-600"
-                    }`}
-                  >
-                    {i + 1}
-                  </div>
-                  <div className="mt-2 capitalize">{step}</div>
-                </div>
-              ))}
-            </div>
-            <div className="h-1 w-full bg-gray-300 rounded-full mt-4 relative">
+        <div className="space-y-6">
+          {steps.map((step, index) => (
+            <div key={step.key} className="flex items-center">
               <div
-                className="h-1 bg-green-500 rounded-full absolute top-0 left-0 transition-all"
-                style={{
-                  width: `${((getStatusIndex(latestOrder.status) + 1) / steps.length) * 100}%`,
-                }}
-              ></div>
+                className={`w-6 h-6 rounded-full flex items-center justify-center text-white ${
+                  index <= getStepIndex() ? step.color : "bg-gray-300"
+                }`}
+              >
+                {index < getStepIndex() ? "✓" : index === getStepIndex() ? "⏳" : "•"}
+              </div>
+              <span className="ml-4 text-lg">{step.label}</span>
             </div>
+          ))}
+
+          <div className="mt-8 p-4 bg-gray-100 rounded shadow">
+            <p><strong>👤 Name:</strong> {order.name}</p>
+            <p><strong>📞 Phone:</strong> {order.phone}</p>
+            <p><strong>📦 Items:</strong></p>
+            <ul className="ml-4 list-disc">
+              {order.items?.map((item, i) => (
+                <li key={i}>
+                  {item.name} × {item.quantity}
+                </li>
+              ))}
+            </ul>
           </div>
         </div>
       )}
