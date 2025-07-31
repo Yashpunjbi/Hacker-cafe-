@@ -42,7 +42,7 @@ const OrderHistory = () => {
           {orders.map((order) => (
             <div key={order.id} className="border rounded p-4 shadow">
               <p><strong>Order ID:</strong> {order.id}</p>
-              <p><strong>Date:</strong> {new Date(order.timestamp?.seconds * 1000).toLocaleString()}</p>
+              <p><strong>Date:</strong> {new Date(order.createdAt?.seconds * 1000).toLocaleString()}</p>
               <p><strong>Status:</strong> <span className="font-semibold">{order.status}</span></p>
 
               <div className="mt-4 space-y-3">
