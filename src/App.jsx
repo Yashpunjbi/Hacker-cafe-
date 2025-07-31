@@ -24,7 +24,7 @@ const App = () => {
             <Route path="/offers" element={<Offers />} />     {/* ✅ Fixed Offers import */}
             <Route path="/checkout" element={<Checkout />} />
             <Route path="/orders" element={<Orders />} />     {/* ✅ Order History */}
-            <Route path="/track" element={<Track />} />       {/* ✅ Track Orders */}
+            <Route path="/track/:id" element={<Track />} />       {/* ✅ Track Orders */}
             <Route path="/contact" element={<Contact />} />   {/* ✅ Contact Us */}
             <Route path="/terms" element={<Terms />} />       {/* ✅ Terms & Conditions */}
           </Routes>
