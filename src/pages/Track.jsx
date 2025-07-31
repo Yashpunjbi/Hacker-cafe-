@@ -1,62 +1,84 @@
-import React, { useEffect, useState } from 'react';
-import { db } from '../firebase';
-import { collection, query, where, orderBy, limit, onSnapshot } from 'firebase/firestore';
-import { useAuth } from '../context/AuthContext';
+// src/pages/Track.jsx
+import React, { useEffect, useState } from "react";
+import { db } from "../firebase";
+import { doc, onSnapshot } from "firebase/firestore";
+import { useAuth } from "../context/AuthContext";
 
-const statusSteps = ["placed", "preparing", "out_for_delivery", "delivered"];
+const steps = ["placed", "preparing", "out for delivery", "delivered"];
 
-const TrackOrder = () => {
+const Track = () => {
   const { currentUser } = useAuth();
-  const [order, setOrder] = useState(null);
+  const [latestOrder, setLatestOrder] = useState(null);
 
   useEffect(() => {
     if (!currentUser) return;
 
-    const q = query(
-      collection(db, "orders"),
-      where("userEmail", "==", currentUser.email),
-      orderBy("createdAt", "desc"),
-      limit(1)
-    );
+    const unsubscribe = onSnapshot(doc(db, "users", currentUser.uid), (userDoc) => {
+      const orderId = userDoc.data()?.latestOrderId;
 
-    const unsubscribe = onSnapshot(q, (snapshot) => {
-      const latestOrder = snapshot.docs[0]?.data();
-      setOrder(latestOrder);
+      if (orderId) {
+        const orderRef = doc(db, "orders", orderId);
+        onSnapshot(orderRef, (orderDoc) => {
+          if (orderDoc.exists()) {
+            setLatestOrder({ id: orderDoc.id, ...orderDoc.data() });
+          }
+        });
+      }
     });
 
     return () => unsubscribe();
   }, [currentUser]);
 
-  if (!currentUser) {
-    return <div className="text-center mt-10">Please login to track your order.</div>;
-  }
-
-  if (!order) {
-    return <div className="text-center mt-10">No active order found.</div>;
-  }
-
-  const currentStatus = statusSteps.indexOf(order.status);
+  const getStatusIndex = (status) => steps.indexOf(status?.toLowerCase());
 
   return (
-    <div className="p-6 max-w-xl mx-auto">
-      <h2 className="text-2xl font-bold mb-6 text-center">📦 Track Your Order</h2>
-      <div className="flex flex-col gap-5">
-        {statusSteps.map((step, index) => (
-          <div key={step} className="flex items-center gap-4">
-            <div className={`w-5 h-5 rounded-full 
-              ${index <= currentStatus ? 'bg-green-500' : 'bg-gray-300'}`} />
-            <div className={`${index <= currentStatus ? 'text-black font-medium' : 'text-gray-400'}`}>
-              {step.replace(/_/g, ' ').toUpperCase()}
+    <div className="p-6 max-w-2xl mx-auto">
+      <h2 className="text-2xl font-bold mb-6">📦 Track Your Order</h2>
+
+      {!latestOrder ? (
+        <p className="text-gray-500">No recent order found.</p>
+      ) : (
+        <div className="space-y-4">
+          <p>
+            <strong>Order ID:</strong> {latestOrder.id}
+          </p>
+          <p>
+            <strong>Status:</strong>{" "}
+            <span className="capitalize text-blue-600 font-semibold">
+              {latestOrder.status}
+            </span>
+          </p>
+
+          <div className="mt-6">
+            <div className="flex justify-between items-center text-sm font-medium text-gray-600">
+              {steps.map((step, i) => (
+                <div key={i} className="flex-1 text-center">
+                  <div
+                    className={`w-10 h-10 mx-auto rounded-full flex items-center justify-center ${
+                      i <= getStatusIndex(latestOrder.status)
+                        ? "bg-green-500 text-white"
+                        : "bg-gray-300 text-gray-600"
+                    }`}
+                  >
+                    {i + 1}
+                  </div>
+                  <div className="mt-2 capitalize">{step}</div>
+                </div>
+              ))}
+            </div>
+            <div className="h-1 w-full bg-gray-300 rounded-full mt-4 relative">
+              <div
+                className="h-1 bg-green-500 rounded-full absolute top-0 left-0 transition-all"
+                style={{
+                  width: `${((getStatusIndex(latestOrder.status) + 1) / steps.length) * 100}%`,
+                }}
+              ></div>
             </div>
           </div>
-        ))}
-      </div>
-      <p className="mt-6 text-sm text-gray-500 text-center">
-        Order ID: {order.id || 'Auto-ID'} <br />
-        Last updated: {new Date(order.createdAt?.seconds * 1000).toLocaleString()}
-      </p>
+        </div>
+      )}
     </div>
   );
 };
 
-export default TrackOrder;
+export default Track;
