@@ -1,52 +1,49 @@
-// src/pages/Orders.jsx or OrderHistory.jsx
 import React, { useEffect, useState } from "react";
-import { auth, db } from "../firebase";
 import { collection, query, where, getDocs } from "firebase/firestore";
-import { onAuthStateChanged } from "firebase/auth";
+import { db, auth } from "../firebase";
 
-const Orders = () => {
+const OrderHistory = () => {
   const [orders, setOrders] = useState([]);
-  const [loading, setLoading] = useState(true);
+  const user = auth.currentUser;
 
   useEffect(() => {
-    onAuthStateChanged(auth, async (user) => {
-      if (user) {
-        const q = query(
-          collection(db, "orders"),
-          where("email", "==", user.email)
-        );
-        const querySnapshot = await getDocs(q);
-        const data = querySnapshot.docs.map((doc) => ({
-          id: doc.id,
-          ...doc.data(),
-        }));
-        setOrders(data);
-        setLoading(false);
-      } else {
-        setOrders([]);
-        setLoading(false);
-      }
-    });
-  }, []);
+    const fetchOrders = async () => {
+      if (!user) return;
+      const q = query(collection(db, "orders"), where("userId", "==", user.uid));
+      const querySnapshot = await getDocs(q);
+      const data = querySnapshot.docs.map((doc) => ({
+        id: doc.id,
+        ...doc.data(),
+      }));
+      setOrders(data);
+    };
 
-  if (loading) return <p className="text-center mt-10">Loading orders...</p>;
+    fetchOrders();
+  }, [user]);
 
   return (
-    <div className="p-4">
-      <h2 className="text-2xl font-bold mb-4">Your Orders</h2>
+    <div className="p-6 max-w-3xl mx-auto text-white">
+      <h2 className="text-2xl font-bold mb-4 text-center">Order History</h2>
       {orders.length === 0 ? (
-        <p>No orders found.</p>
+        <p className="text-center text-gray-300">No orders found</p>
       ) : (
         <ul className="space-y-4">
           {orders.map((order) => (
-            <li
-              key={order.id}
-              className="border p-4 rounded shadow bg-white dark:bg-gray-800"
-            >
+            <li key={order.id} className="bg-gray-800 p-4 rounded shadow-md">
               <p><strong>Order ID:</strong> {order.id}</p>
               <p><strong>Status:</strong> {order.status}</p>
-              <p><strong>Total:</strong> ₹{order.total}</p>
-              <p><strong>Date:</strong> {new Date(order.timestamp?.toDate()).toLocaleString()}</p>
+              <p><strong>Items:</strong></p>
+              <ul className="ml-4 list-disc">
+                {order.cart?.map((item, i) => (
+                  <li key={i}>{item.name} x {item.quantity}</li>
+                ))}
+              </ul>
+              <a
+                href={`/track?id=${order.id}`}
+                className="inline-block mt-2 text-sm text-blue-400 underline"
+              >
+                Track Order
+              </a>
             </li>
           ))}
         </ul>
@@ -55,4 +52,4 @@ const Orders = () => {
   );
 };
 
-export default Orders;
+export default OrderHistory;
