@@ -1,79 +1,83 @@
 // src/pages/Track.jsx
-import React, { useEffect, useState } from "react";
+import React, { useState } from "react";
+import { doc, getDoc } from "firebase/firestore";
 import { db } from "../firebase";
-import { doc, onSnapshot } from "firebase/firestore";
-import { useAuth } from "../context/AuthContext";
 
-const steps = ["placed", "preparing", "out for delivery", "delivered"];
+const statusStages = ["placed", "preparing", "out for delivery", "delivered"];
 
 const Track = () => {
-  const { currentUser } = useAuth();
-  const [latestOrder, setLatestOrder] = useState(null);
+  const [orderId, setOrderId] = useState("");
+  const [order, setOrder] = useState(null);
+  const [notFound, setNotFound] = useState(false);
 
-  useEffect(() => {
-    if (!currentUser) return;
+  const handleTrack = async () => {
+    if (!orderId.trim()) return;
 
-    const unsubscribe = onSnapshot(doc(db, "users", currentUser.uid), (userDoc) => {
-      const orderId = userDoc.data()?.latestOrderId;
+    const docRef = doc(db, "orders", orderId.trim());
+    const snap = await getDoc(docRef);
 
-      if (orderId) {
-        const orderRef = doc(db, "orders", orderId);
-        onSnapshot(orderRef, (orderDoc) => {
-          if (orderDoc.exists()) {
-            setLatestOrder({ id: orderDoc.id, ...orderDoc.data() });
-          }
-        });
-      }
-    });
+    if (snap.exists()) {
+      setOrder(snap.data());
+      setNotFound(false);
+    } else {
+      setOrder(null);
+      setNotFound(true);
+    }
+  };
 
-    return () => unsubscribe();
-  }, [currentUser]);
-
-  const getStatusIndex = (status) => steps.indexOf(status?.toLowerCase());
+  const currentIndex = statusStages.indexOf(order?.status);
 
   return (
-    <div className="p-6 max-w-2xl mx-auto">
-      <h2 className="text-2xl font-bold mb-6">📦 Track Your Order</h2>
+    <div className="p-4 max-w-xl mx-auto">
+      <h2 className="text-2xl font-bold mb-4">Track Your Order</h2>
 
-      {!latestOrder ? (
-        <p className="text-gray-500">No recent order found.</p>
-      ) : (
-        <div className="space-y-4">
-          <p>
-            <strong>Order ID:</strong> {latestOrder.id}
-          </p>
-          <p>
-            <strong>Status:</strong>{" "}
-            <span className="capitalize text-blue-600 font-semibold">
-              {latestOrder.status}
-            </span>
-          </p>
+      <div className="flex space-x-2 mb-6">
+        <input
+          type="text"
+          placeholder="Enter Order ID"
+          value={orderId}
+          onChange={(e) => setOrderId(e.target.value)}
+          className="flex-1 border p-2 rounded"
+        />
+        <button
+          onClick={handleTrack}
+          className="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700"
+        >
+          Track
+        </button>
+      </div>
+
+      {notFound && (
+        <p className="text-red-600 font-medium">Order not found. Please check the ID.</p>
+      )}
+
+      {order && (
+        <div className="bg-white dark:bg-gray-800 p-4 rounded shadow">
+          <h3 className="text-xl font-bold mb-3">Order Progress</h3>
+          <div className="space-y-4">
+            {statusStages.map((stage, idx) => (
+              <div key={stage} className="flex items-center space-x-3">
+                <div
+                  className={`w-4 h-4 rounded-full ${
+                    idx <= currentIndex ? "bg-green-500" : "bg-gray-300"
+                  }`}
+                ></div>
+                <p
+                  className={`${
+                    idx <= currentIndex ? "text-green-600 font-semibold" : "text-gray-500"
+                  }`}
+                >
+                  {stage.charAt(0).toUpperCase() + stage.slice(1)}
+                </p>
+              </div>
+            ))}
+          </div>
 
           <div className="mt-6">
-            <div className="flex justify-between items-center text-sm font-medium text-gray-600">
-              {steps.map((step, i) => (
-                <div key={i} className="flex-1 text-center">
-                  <div
-                    className={`w-10 h-10 mx-auto rounded-full flex items-center justify-center ${
-                      i <= getStatusIndex(latestOrder.status)
-                        ? "bg-green-500 text-white"
-                        : "bg-gray-300 text-gray-600"
-                    }`}
-                  >
-                    {i + 1}
-                  </div>
-                  <div className="mt-2 capitalize">{step}</div>
-                </div>
-              ))}
-            </div>
-            <div className="h-1 w-full bg-gray-300 rounded-full mt-4 relative">
-              <div
-                className="h-1 bg-green-500 rounded-full absolute top-0 left-0 transition-all"
-                style={{
-                  width: `${((getStatusIndex(latestOrder.status) + 1) / steps.length) * 100}%`,
-                }}
-              ></div>
-            </div>
+            <p><strong>Status:</strong> {order.status}</p>
+            <p><strong>Total:</strong> ₹{order.total}</p>
+            <p><strong>Address:</strong> {order.address}</p>
+            <p><strong>Date:</strong> {new Date(order.timestamp?.toDate()).toLocaleString()}</p>
           </div>
         </div>
       )}
