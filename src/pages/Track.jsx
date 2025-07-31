@@ -52,7 +52,7 @@ const Track = () => {
       )}
 
       {order && (
-        <div className="bg-white dark:bg-gray-800 p-4 rounded shadow">
+        <div className="bg-white p-4 rounded shadow">
           <h3 className="text-xl font-bold mb-3">Order Progress</h3>
           <div className="space-y-4">
             {statusStages.map((stage, idx) => (
@@ -73,7 +73,7 @@ const Track = () => {
             ))}
           </div>
 
-          <div className="mt-6">
+          <div className="mt-6 space-y-1 text-sm">
             <p><strong>Status:</strong> {order.status}</p>
             <p><strong>Total:</strong> ₹{order.total}</p>
             <p><strong>Address:</strong> {order.address}</p>
