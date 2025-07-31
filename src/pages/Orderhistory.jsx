@@ -7,51 +7,44 @@ import {
   orderBy,
   onSnapshot,
 } from "firebase/firestore";
-import { onAuthStateChanged } from "firebase/auth";
 
 const OrderHistory = () => {
   const [orders, setOrders] = useState([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    let unsubscribe;
+    const user = auth.currentUser;
+    if (!user) {
+      setOrders([]);
+      setLoading(false);
+      return;
+    }
 
-    const fetchOrders = () => {
-      onAuthStateChanged(auth, (user) => {
-        if (user) {
-          const ordersRef = collection(db, "orders");
+    const ordersRef = collection(db, "orders");
+    const q = query(
+      ordersRef,
+      where("email", "==", user.email),
+      orderBy("createdAt", "desc")
+    );
 
-          try {
-            const q = query(
-              ordersRef,
-              where("email", "==", user.email),
-              orderBy("createdAt", "desc")
-            );
+    const unsubscribe = onSnapshot(
+      q,
+      (snapshot) => {
+        const data = snapshot.docs.map((doc) => ({
+          id: doc.id,
+          ...doc.data(),
+        }));
+        setOrders(data);
+        setLoading(false);
+      },
+      (error) => {
+        console.error("Firestore snapshot error:", error);
+        setOrders([]);
+        setLoading(false);
+      }
+    );
 
-            unsubscribe = onSnapshot(q, (snapshot) => {
-              const data = snapshot.docs.map((doc) => ({
-                id: doc.id,
-                ...doc.data(),
-              }));
-              setOrders(data);
-              setLoading(false);
-            });
-          } catch (error) {
-            console.error("Query error:", error);
-            setLoading(false);
-          }
-        } else {
-          setOrders([]);
-          setLoading(false);
-        }
-      });
-    };
-
-    fetchOrders();
-
-    return () => {
-      if (unsubscribe) unsubscribe();
-    };
+    return () => unsubscribe();
   }, []);
 
   if (loading) {
@@ -95,7 +88,6 @@ const OrderHistory = () => {
           <p className="text-sm text-gray-500 mb-2">
             <strong>Total:</strong> ₹{order.total}
           </p>
-
           <div className="mt-2">
             <p className="font-semibold text-gray-700">Items:</p>
             <ul className="pl-4 list-disc text-sm">
