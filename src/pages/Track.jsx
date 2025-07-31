@@ -1,86 +1,62 @@
-// src/pages/Track.jsx
-import React, { useState } from "react";
-import { doc, getDoc } from "firebase/firestore";
-import { db } from "../firebase";
-
-const statusStages = ["placed", "preparing", "out for delivery", "delivered"];
+import React, { useEffect, useState } from 'react';
+import { db, auth } from '../firebase';
+import { collection, query, where, getDocs, orderBy, limit } from 'firebase/firestore';
+import { onAuthStateChanged } from 'firebase/auth';
 
 const Track = () => {
-  const [orderId, setOrderId] = useState("");
   const [order, setOrder] = useState(null);
-  const [notFound, setNotFound] = useState(false);
+  const [loading, setLoading] = useState(true);
 
-  const handleTrack = async () => {
-    if (!orderId.trim()) return;
+  useEffect(() => {
+    const unsubscribe = onAuthStateChanged(auth, async (user) => {
+      if (user) {
+        const q = query(
+          collection(db, 'orders'),
+          where('email', '==', user.email),
+          orderBy('timestamp', 'desc'),
+          limit(1) // 👈 latest order only
+        );
+        const querySnapshot = await getDocs(q);
+        if (!querySnapshot.empty) {
+          setOrder({ id: querySnapshot.docs[0].id, ...querySnapshot.docs[0].data() });
+        }
+      }
+      setLoading(false);
+    });
 
-    const docRef = doc(db, "orders", orderId.trim());
-    const snap = await getDoc(docRef);
+    return () => unsubscribe();
+  }, []);
 
-    if (snap.exists()) {
-      setOrder(snap.data());
-      setNotFound(false);
-    } else {
-      setOrder(null);
-      setNotFound(true);
-    }
-  };
+  if (loading) return <p className="text-center">Loading...</p>;
 
-  const currentIndex = statusStages.indexOf(order?.status);
+  if (!order) return <p className="text-center text-gray-600">No recent order found.</p>;
+
+  const steps = ['Order Confirmed', 'Being Baked', 'Order is Ready', 'Order Picked Up'];
+  const currentStep = steps.indexOf(order.status);
 
   return (
-    <div className="p-4 max-w-xl mx-auto">
-      <h2 className="text-2xl font-bold mb-4">Track Your Order</h2>
+    <div className="max-w-xl mx-auto p-6">
+      <h2 className="text-3xl font-bold text-center mb-6">Track Your Order</h2>
+      <div className="bg-white p-4 rounded shadow">
+        <p><strong>Order ID:</strong> {order.id}</p>
+        <p><strong>Status:</strong> {order.status}</p>
+        <p><strong>Address:</strong> {order.address}</p>
+        <p><strong>Items:</strong> {order.items.map((item) => item.name).join(', ')}</p>
 
-      <div className="flex space-x-2 mb-6">
-        <input
-          type="text"
-          placeholder="Enter Order ID"
-          value={orderId}
-          onChange={(e) => setOrderId(e.target.value)}
-          className="flex-1 border p-2 rounded"
-        />
-        <button
-          onClick={handleTrack}
-          className="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700"
-        >
-          Track
-        </button>
-      </div>
-
-      {notFound && (
-        <p className="text-red-600 font-medium">Order not found. Please check the ID.</p>
-      )}
-
-      {order && (
-        <div className="bg-white p-4 rounded shadow">
-          <h3 className="text-xl font-bold mb-3">Order Progress</h3>
-          <div className="space-y-4">
-            {statusStages.map((stage, idx) => (
-              <div key={stage} className="flex items-center space-x-3">
-                <div
-                  className={`w-4 h-4 rounded-full ${
-                    idx <= currentIndex ? "bg-green-500" : "bg-gray-300"
-                  }`}
-                ></div>
-                <p
-                  className={`${
-                    idx <= currentIndex ? "text-green-600 font-semibold" : "text-gray-500"
-                  }`}
-                >
-                  {stage.charAt(0).toUpperCase() + stage.slice(1)}
-                </p>
-              </div>
-            ))}
-          </div>
-
-          <div className="mt-6 space-y-1 text-sm">
-            <p><strong>Status:</strong> {order.status}</p>
-            <p><strong>Total:</strong> ₹{order.total}</p>
-            <p><strong>Address:</strong> {order.address}</p>
-            <p><strong>Date:</strong> {new Date(order.timestamp?.toDate()).toLocaleString()}</p>
-          </div>
+        {/* Progress Steps */}
+        <div className="mt-4">
+          {steps.map((step, index) => (
+            <div key={index} className="flex items-center mb-2">
+              <div
+                className={`w-4 h-4 rounded-full mr-2 ${
+                  index <= currentStep ? 'bg-green-500' : 'bg-gray-300'
+                }`}
+              ></div>
+              <span className={index <= currentStep ? 'font-semibold' : 'text-gray-500'}>{step}</span>
+            </div>
+          ))}
         </div>
-      )}
+      </div>
     </div>
   );
 };
