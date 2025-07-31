@@ -1,6 +1,12 @@
 import React, { useEffect, useState } from "react";
 import { db, auth } from "../firebase";
-import { collection, query, where, orderBy, onSnapshot } from "firebase/firestore";
+import {
+  collection,
+  query,
+  where,
+  orderBy,
+  onSnapshot,
+} from "firebase/firestore";
 import { onAuthStateChanged } from "firebase/auth";
 
 const OrderHistory = () => {
@@ -13,20 +19,28 @@ const OrderHistory = () => {
     const fetchOrders = () => {
       onAuthStateChanged(auth, (user) => {
         if (user) {
-          const q = query(
-            collection(db, "orders"),
-            where("email", "==", user.email),
-            orderBy("createdAt", "desc")
-          );
+          const ordersRef = collection(db, "orders");
 
-          unsubscribe = onSnapshot(q, (snapshot) => {
-            const data = snapshot.docs.map((doc) => ({
-              id: doc.id,
-              ...doc.data(),
-            }));
-            setOrders(data);
+          // 🛠️ Some documents may not have createdAt - so fallback to basic query
+          try {
+            const q = query(
+              ordersRef,
+              where("email", "==", user.email),
+              orderBy("createdAt", "desc")
+            );
+
+            unsubscribe = onSnapshot(q, (snapshot) => {
+              const data = snapshot.docs.map((doc) => ({
+                id: doc.id,
+                ...doc.data(),
+              }));
+              setOrders(data);
+              setLoading(false);
+            });
+          } catch (error) {
+            console.error("Query error:", error);
             setLoading(false);
-          });
+          }
         } else {
           setOrders([]);
           setLoading(false);
@@ -59,14 +73,19 @@ const OrderHistory = () => {
 
   return (
     <div className="max-w-3xl mx-auto p-6 mt-6">
-      <h2 className="text-2xl font-bold mb-6 text-pink-600 text-center">Your Order History</h2>
+      <h2 className="text-2xl font-bold mb-6 text-pink-600 text-center">
+        Your Order History
+      </h2>
       {orders.map((order) => (
-        <div key={order.id} className="border rounded-md p-4 mb-6 shadow-sm bg-white">
+        <div
+          key={order.id}
+          className="border rounded-md p-4 mb-6 shadow-sm bg-white"
+        >
           <p className="text-sm text-gray-500 mb-1">
             <strong>Date:</strong>{" "}
-            {order.createdAt instanceof Object && order.createdAt.toDate
+            {order.createdAt?.toDate
               ? order.createdAt.toDate().toLocaleString()
-              : "N/A"}
+              : "Not available"}
           </p>
           <p className="text-sm text-gray-500 mb-1">
             <strong>Order ID:</strong> {order.id}
@@ -81,7 +100,7 @@ const OrderHistory = () => {
           <div className="mt-2">
             <p className="font-semibold text-gray-700">Items:</p>
             <ul className="pl-4 list-disc text-sm">
-              {order.items.map((item, index) => (
+              {order.items?.map((item, index) => (
                 <li key={index}>
                   {item.name} × {item.qty} — ₹{item.price}
                 </li>
