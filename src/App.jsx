@@ -9,7 +9,7 @@ import OrderHistory from "./pages/OrderHistory";
 import Track from "./pages/Track";
 import Contact from "./pages/Contact";
 import Terms from "./pages/Terms";
-import BottomNavbar from "./components/BottomNavbar"; // ✅ updated
+import BottomNavbar from "./components/BottomNav"; // ✅ updated
 import { ToastContainer } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 
