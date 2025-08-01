@@ -1,58 +1,133 @@
-import React from "react";
-import { NavLink, useLocation } from "react-router-dom";
+import React, { useState, useRef, useEffect } from "react";
+import { NavLink, useNavigate } from "react-router-dom";
 import { FaHome, FaTags, FaShoppingCart, FaUser } from "react-icons/fa";
+import { getAuth, signOut } from "firebase/auth";
 
 const BottomNavbar = () => {
-  const location = useLocation();
+  const [showDropdown, setShowDropdown] = useState(false);
+  const dropdownRef = useRef(null);
+  const navigate = useNavigate();
 
-  const navItems = [
-    { path: "/", label: "Home", icon: FaHome },
-    { path: "/offers", label: "Offers", icon: FaTags },
-    { path: "/cart", label: "Cart", icon: FaShoppingCart },
-    { path: "/orders", label: "Profile", icon: FaUser },
-  ];
+  // Hide dropdown on outside click
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (dropdownRef.current && !dropdownRef.current.contains(event.target)) {
+        setShowDropdown(false);
+      }
+    };
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, []);
+
+  const handleLogout = () => {
+    const auth = getAuth();
+    signOut(auth).then(() => {
+      navigate("/");
+      setShowDropdown(false);
+    });
+  };
 
   return (
-    <div className="fixed bottom-0 left-0 right-0 bg-white dark:bg-gray-900 border-t border-gray-200 dark:border-gray-700 shadow-lg z-50">
-      <div className="flex justify-around items-center py-2">
-        {navItems.map((item) => {
-          const isActive = location.pathname === item.path;
-          const Icon = item.icon;
+    <nav className="fixed bottom-0 left-0 w-full bg-white shadow z-50">
+      <div className="flex justify-around items-center py-2 relative">
+        <NavLink
+          to="/"
+          className={({ isActive }) =>
+            `flex flex-col items-center text-xs transition-all duration-300 ${
+              isActive ? "text-red-500 scale-110" : "text-gray-500"
+            }`
+          }
+        >
+          <FaHome size={22} />
+          <span>Home</span>
+        </NavLink>
 
-          return (
-            <NavLink
-              to={item.path}
-              key={item.path}
-              className="flex flex-col items-center group relative"
-            >
-              <div
-                className={`transition-all duration-300 ease-in-out p-2 rounded-full ${
-                  isActive
-                    ? "text-pink-600 scale-125 animate-bounce"
-                    : "text-gray-500 dark:text-gray-300"
-                }`}
-              >
-                <Icon size={22} />
-              </div>
-              <span
-                className={`text-xs mt-1 transition-all duration-300 ${
-                  isActive
-                    ? "text-pink-600 font-semibold"
-                    : "text-gray-500 dark:text-gray-300"
-                }`}
-              >
-                {item.label}
-              </span>
+        <NavLink
+          to="/offers"
+          className={({ isActive }) =>
+            `flex flex-col items-center text-xs transition-all duration-300 ${
+              isActive ? "text-red-500 scale-110" : "text-gray-500"
+            }`
+          }
+        >
+          <FaTags size={22} />
+          <span>Offers</span>
+        </NavLink>
 
-              {/* ✅ Animated bottom indicator bar */}
-              {isActive && (
-                <span className="absolute -bottom-[2px] left-1/2 transform -translate-x-1/2 w-5 h-[3px] rounded-full bg-pink-500 transition-all duration-300"></span>
-              )}
-            </NavLink>
-          );
-        })}
+        <NavLink
+          to="/cart"
+          className={({ isActive }) =>
+            `flex flex-col items-center text-xs transition-all duration-300 ${
+              isActive ? "text-red-500 scale-110" : "text-gray-500"
+            }`
+          }
+        >
+          <FaShoppingCart size={22} />
+          <span>Cart</span>
+        </NavLink>
+
+        {/* Profile + Dropdown */}
+        <div className="relative" ref={dropdownRef}>
+          <button
+            onClick={() => setShowDropdown(!showDropdown)}
+            className={`flex flex-col items-center text-xs transition-all duration-300 ${
+              showDropdown ? "text-red-500 scale-110" : "text-gray-500"
+            }`}
+          >
+            <FaUser size={22} />
+            <span>Profile</span>
+          </button>
+
+          {/* Dropdown */}
+          {showDropdown && (
+            <div className="absolute bottom-12 right-0 bg-white border rounded shadow-md w-40 text-sm z-50">
+              <button
+                onClick={() => {
+                  navigate("/orders");
+                  setShowDropdown(false);
+                }}
+                className="block w-full px-4 py-2 text-left hover:bg-gray-100"
+              >
+                Order History
+              </button>
+              <button
+                onClick={() => {
+                  navigate("/track");
+                  setShowDropdown(false);
+                }}
+                className="block w-full px-4 py-2 text-left hover:bg-gray-100"
+              >
+                Track Order
+              </button>
+              <button
+                onClick={() => {
+                  navigate("/contact");
+                  setShowDropdown(false);
+                }}
+                className="block w-full px-4 py-2 text-left hover:bg-gray-100"
+              >
+                Contact Us
+              </button>
+              <button
+                onClick={() => {
+                  navigate("/terms");
+                  setShowDropdown(false);
+                }}
+                className="block w-full px-4 py-2 text-left hover:bg-gray-100"
+              >
+                Terms & Conditions
+              </button>
+              <button
+                onClick={handleLogout}
+                className="block w-full px-4 py-2 text-left hover:bg-red-100 text-red-600"
+              >
+                Logout
+              </button>
+            </div>
+          )}
+        </div>
       </div>
-    </div>
+    </nav>
   );
 };
 
