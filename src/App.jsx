@@ -6,6 +6,7 @@ import Cart from "./pages/Cart";
 import Offers from "./pages/Offers";
 import Checkout from "./pages/Checkout";
 import OrderHistory from "./pages/OrderHistory";
+import Login from "./pages/Login";
 import Track from "./pages/Track";
 import Contact from "./pages/Contact";
 import Terms from "./pages/Terms";
@@ -29,6 +30,7 @@ const App = () => {
             <Route path="/track" element={<Track />} />
             <Route path="/contact" element={<Contact />} />
             <Route path="/terms" element={<Terms />} />
+<Route path="/login" element={<Login />} />
           </Routes>
         </div>
         <BottomNavbar />
