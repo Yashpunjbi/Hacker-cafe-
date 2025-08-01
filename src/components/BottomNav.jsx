@@ -1,25 +1,33 @@
-import { FaHome, FaTags, FaShoppingCart } from "react-icons/fa";
-import { useNavigate } from "react-router-dom";
+import React from 'react';
+import { Link, useLocation } from 'react-router-dom';
+import { FaHome, FaTags, FaShoppingCart, FaUser } from 'react-icons/fa';
 
-const BottomNav = () => {
-  const navigate = useNavigate();
+const BottomNavbar = () => {
+  const location = useLocation();
+
+  const navItems = [
+    { name: 'Home', path: '/', icon: <FaHome /> },
+    { name: 'Offers', path: '/offers', icon: <FaTags /> },
+    { name: 'Cart', path: '/cart', icon: <FaShoppingCart /> },
+    { name: 'Profile', path: '/profile', icon: <FaUser /> },
+  ];
 
   return (
-    <div className="fixed bottom-0 left-0 right-0 bg-white border-t shadow-md flex justify-around p-2 z-50">
-      <button onClick={() => navigate("/")} className="flex flex-col items-center text-pink-600">
-        <FaHome size={20} />
-        <span className="text-xs">Home</span>
-      </button>
-      <button onClick={() => navigate("/offers")} className="flex flex-col items-center text-pink-600">
-        <FaTags size={20} />
-        <span className="text-xs">Offers</span>
-      </button>
-      <button onClick={() => navigate("/cart")} className="flex flex-col items-center text-pink-600">
-        <FaShoppingCart size={20} />
-        <span className="text-xs">Cart</span>
-      </button>
+    <div className="fixed bottom-0 w-full h-[60px] bg-white shadow-md flex justify-around items-center border-t rounded-t-2xl z-50">
+      {navItems.map((item) => (
+        <Link
+          key={item.name}
+          to={item.path}
+          className={`flex flex-col items-center text-sm ${
+            location.pathname === item.path ? 'text-orange-500' : 'text-gray-500'
+          }`}
+        >
+          <div className="text-xl">{item.icon}</div>
+          <span className="text-[10px]">{item.name}</span>
+        </Link>
+      ))}
     </div>
   );
 };
 
-export default BottomNav;
+export default BottomNavbar;
