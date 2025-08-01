@@ -9,7 +9,8 @@ import OrderHistory from "./pages/OrderHistory";
 import Track from "./pages/Track";
 import Contact from "./pages/Contact";
 import Terms from "./pages/Terms";
-import BottomNavbar from "./components/BottomNav"; // ✅ updated
+import BottomNavbar from "./components/BottomNav";
+import Navbar from "./components/Navbar"; // ✅ Add this
 import { ToastContainer } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 
@@ -17,7 +18,8 @@ const App = () => {
   return (
     <CartProvider>
       <Router>
-        <div className="pb-20">
+        <Navbar /> {/* ✅ Top profile/login nav */}
+        <div className="pb-20 pt-16"> {/* Add padding for top navbar space */}
           <Routes>
             <Route path="/" element={<Menu />} />
             <Route path="/cart" element={<Cart />} />
@@ -29,7 +31,7 @@ const App = () => {
             <Route path="/terms" element={<Terms />} />
           </Routes>
         </div>
-        <BottomNavbar /> {/* 👈 New updated nav */}
+        <BottomNavbar />
         <ToastContainer position="bottom-center" />
       </Router>
     </CartProvider>
