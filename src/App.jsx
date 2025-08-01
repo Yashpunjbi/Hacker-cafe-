@@ -1,6 +1,7 @@
 import React from "react";
 import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
 import { CartProvider } from "./context/CartContext";
+import Home from "./pages/Home";
 import Menu from "./pages/Menu";
 import Cart from "./pages/Cart";
 import Offers from "./pages/Offers";
@@ -22,6 +23,7 @@ const App = () => {
         <Navbar /> {/* ✅ Top profile/login nav */}
         <div className="pb-20 pt-16"> {/* Add padding for top navbar space */}
           <Routes>
+            <Route path="/" element={<Home />} /> 
             <Route path="/" element={<Menu />} />
             <Route path="/cart" element={<Cart />} />
             <Route path="/offers" element={<Offers />} />
