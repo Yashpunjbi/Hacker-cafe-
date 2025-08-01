@@ -1,14 +1,22 @@
 import React, { useState, useRef, useEffect } from "react";
 import { NavLink, useNavigate } from "react-router-dom";
 import { FaHome, FaTags, FaShoppingCart, FaUser } from "react-icons/fa";
-import { getAuth, signOut } from "firebase/auth";
+import { getAuth, onAuthStateChanged, signOut } from "firebase/auth";
 
 const BottomNavbar = () => {
   const [showDropdown, setShowDropdown] = useState(false);
+  const [user, setUser] = useState(null);
   const dropdownRef = useRef(null);
   const navigate = useNavigate();
 
-  // Hide dropdown on outside click
+  useEffect(() => {
+    const auth = getAuth();
+    const unsubscribe = onAuthStateChanged(auth, (currentUser) => {
+      setUser(currentUser);
+    });
+    return () => unsubscribe();
+  }, []);
+
   useEffect(() => {
     const handleClickOutside = (event) => {
       if (dropdownRef.current && !dropdownRef.current.contains(event.target)) {
@@ -66,66 +74,75 @@ const BottomNavbar = () => {
           <span>Cart</span>
         </NavLink>
 
-        {/* Profile + Dropdown */}
-        <div className="relative" ref={dropdownRef}>
+        {/* 👇 Conditional Login/Profile */}
+        {user ? (
+          <div className="relative" ref={dropdownRef}>
+            <button
+              onClick={() => setShowDropdown(!showDropdown)}
+              className={`flex flex-col items-center text-xs transition-all duration-300 ${
+                showDropdown ? "text-red-500 scale-110" : "text-gray-500"
+              }`}
+            >
+              <FaUser size={22} />
+              <span>Profile</span>
+            </button>
+
+            {showDropdown && (
+              <div className="absolute bottom-12 right-0 bg-white border rounded shadow-md w-40 text-sm z-50">
+                <button
+                  onClick={() => {
+                    navigate("/orders");
+                    setShowDropdown(false);
+                  }}
+                  className="block w-full px-4 py-2 text-left hover:bg-gray-100"
+                >
+                  Order History
+                </button>
+                <button
+                  onClick={() => {
+                    navigate("/track");
+                    setShowDropdown(false);
+                  }}
+                  className="block w-full px-4 py-2 text-left hover:bg-gray-100"
+                >
+                  Track Order
+                </button>
+                <button
+                  onClick={() => {
+                    navigate("/contact");
+                    setShowDropdown(false);
+                  }}
+                  className="block w-full px-4 py-2 text-left hover:bg-gray-100"
+                >
+                  Contact Us
+                </button>
+                <button
+                  onClick={() => {
+                    navigate("/terms");
+                    setShowDropdown(false);
+                  }}
+                  className="block w-full px-4 py-2 text-left hover:bg-gray-100"
+                >
+                  Terms & Conditions
+                </button>
+                <button
+                  onClick={handleLogout}
+                  className="block w-full px-4 py-2 text-left hover:bg-red-100 text-red-600"
+                >
+                  Logout
+                </button>
+              </div>
+            )}
+          </div>
+        ) : (
           <button
-            onClick={() => setShowDropdown(!showDropdown)}
-            className={`flex flex-col items-center text-xs transition-all duration-300 ${
-              showDropdown ? "text-red-500 scale-110" : "text-gray-500"
-            }`}
+            onClick={() => navigate("/login")}
+            className="flex flex-col items-center text-xs text-gray-500"
           >
             <FaUser size={22} />
-            <span>Profile</span>
+            <span>Login</span>
           </button>
-
-          {/* Dropdown */}
-          {showDropdown && (
-            <div className="absolute bottom-12 right-0 bg-white border rounded shadow-md w-40 text-sm z-50">
-              <button
-                onClick={() => {
-                  navigate("/orders");
-                  setShowDropdown(false);
-                }}
-                className="block w-full px-4 py-2 text-left hover:bg-gray-100"
-              >
-                Order History
-              </button>
-              <button
-                onClick={() => {
-                  navigate("/track");
-                  setShowDropdown(false);
-                }}
-                className="block w-full px-4 py-2 text-left hover:bg-gray-100"
-              >
-                Track Order
-              </button>
-              <button
-                onClick={() => {
-                  navigate("/contact");
-                  setShowDropdown(false);
-                }}
-                className="block w-full px-4 py-2 text-left hover:bg-gray-100"
-              >
-                Contact Us
-              </button>
-              <button
-                onClick={() => {
-                  navigate("/terms");
-                  setShowDropdown(false);
-                }}
-                className="block w-full px-4 py-2 text-left hover:bg-gray-100"
-              >
-                Terms & Conditions
-              </button>
-              <button
-                onClick={handleLogout}
-                className="block w-full px-4 py-2 text-left hover:bg-red-100 text-red-600"
-              >
-                Logout
-              </button>
-            </div>
-          )}
-        </div>
+        )}
       </div>
     </nav>
   );
