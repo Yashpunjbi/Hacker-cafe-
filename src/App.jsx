@@ -5,11 +5,11 @@ import Menu from "./pages/Menu";
 import Cart from "./pages/Cart";
 import Offers from "./pages/Offers";
 import Checkout from "./pages/Checkout";
-import OrderHistory from "./pages/OrderHistory";  // ✅ Corrected import
+import OrderHistory from "./pages/OrderHistory";
 import Track from "./pages/Track";
 import Contact from "./pages/Contact";
 import Terms from "./pages/Terms";
-import Navbar from "./components/Navbar";
+import BottomNavbar from "./components/BottomNavbar"; // ✅ updated
 import { ToastContainer } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 
@@ -23,13 +23,13 @@ const App = () => {
             <Route path="/cart" element={<Cart />} />
             <Route path="/offers" element={<Offers />} />
             <Route path="/checkout" element={<Checkout />} />
-            <Route path="/orders" element={<OrderHistory />} /> {/* ✅ Fixed */}
+            <Route path="/orders" element={<OrderHistory />} />
             <Route path="/track" element={<Track />} />
             <Route path="/contact" element={<Contact />} />
             <Route path="/terms" element={<Terms />} />
           </Routes>
         </div>
-        <Navbar />
+        <BottomNavbar /> {/* 👈 New updated nav */}
         <ToastContainer position="bottom-center" />
       </Router>
     </CartProvider>
