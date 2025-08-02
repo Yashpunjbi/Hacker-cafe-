@@ -1,7 +1,7 @@
-// src/firebase.js
 import { initializeApp } from "firebase/app";
 import { getAuth, GoogleAuthProvider } from "firebase/auth";
 import { getFirestore } from "firebase/firestore";
+import { getStorage } from "firebase/storage"; // ✅ Add this line
 
 const firebaseConfig = {
   apiKey: "AIzaSyC00vdY1ePvGb6eIq3GYTn9sZgHQm0lqGc",
@@ -17,6 +17,7 @@ const app = initializeApp(firebaseConfig);
 const auth = getAuth(app);
 const provider = new GoogleAuthProvider();
 const db = getFirestore(app);
+const storage = getStorage(app); // ✅ Add this line
 
-// ✅ Fix: Export app also
-export { app, auth, provider, db };
+// ✅ Now export storage too
+export { app, auth, provider, db, storage };
