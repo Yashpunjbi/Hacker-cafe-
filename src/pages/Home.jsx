@@ -1,10 +1,10 @@
 import React from "react";
-import Products from "../components/menu";
+import Products from "../Pages/Menu";
 
 const Home = () => {
   return (
     <div className="pt-16">
-      <menu />
+      <Menu />
     </div>
   );
 };
