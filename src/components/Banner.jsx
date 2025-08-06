@@ -16,12 +16,12 @@ const Banner = () => {
   return (
     <div className="w-full overflow-x-auto whitespace-nowrap scrollbar-hide py-2">
       {banners.map((banner, i) => (
-        <img
-          key={i}
-          src={banner.imageUrl}
-          alt={banner.title || `Banner ${i}`}
-          className="inline-block w-[90%] rounded-xl mx-2"
-        />
+          <img
+  key={i}
+  src={banner.imageUrl}
+  alt={banner.title || `Banner ${i}`}
+  className="inline-block w-[90%] h-[200px] md:h-[300px] object-cover rounded-xl mx-2 shadow-md"
+/>
       ))}
     </div>
   );
