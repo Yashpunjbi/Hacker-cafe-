@@ -1,74 +1,110 @@
 import React, { useEffect, useState } from "react";
-import { Link } from "react-router-dom";
 import { db } from "../firebase";
-import { collection, getDocs } from "firebase/firestore";
+import { collection, onSnapshot } from "firebase/firestore";
 import { useCart } from "../context/CartContext";
+import { toast } from "react-toastify";
+import { Link } from "react-router-dom";
 
 const Home = () => {
-  const [menuItems, setMenuItems] = useState([]);
+  const [products, setProducts] = useState([]);
+  const [banners, setBanners] = useState([]);
   const [categories, setCategories] = useState([]);
   const { addToCart } = useCart();
 
   useEffect(() => {
-    const fetchMenu = async () => {
-      const menuSnapshot = await getDocs(collection(db, "products"));
-      const menuList = menuSnapshot.docs.map((doc) => ({
-        id: doc.id,
-        ...doc.data(),
-      }));
-      setMenuItems(menuList);
-    };
+    const unsubBanner = onSnapshot(collection(db, "banners"), (snapshot) => {
+      const data = snapshot.docs.map((doc) => ({ id: doc.id, ...doc.data() }));
+      setBanners(data);
+    });
 
-    const fetchCategories = async () => {
-      const catSnapshot = await getDocs(collection(db, "categories"));
-      const catList = catSnapshot.docs.map((doc) => ({
-        id: doc.id,
-        ...doc.data(),
-      }));
-      setCategories(catList);
-    };
+    const unsubCategories = onSnapshot(collection(db, "categories"), (snapshot) => {
+      const data = snapshot.docs.map((doc) => ({ id: doc.id, ...doc.data() }));
+      setCategories(data);
+    });
 
-    fetchMenu();
-    fetchCategories();
+    const unsubProducts = onSnapshot(collection(db, "products"), (snapshot) => {
+      const data = snapshot.docs.map((doc) => ({ id: doc.id, ...doc.data() }));
+      setProducts(data);
+    });
+
+    return () => {
+      unsubBanner();
+      unsubCategories();
+      unsubProducts();
+    };
   }, []);
 
+  const handleAddToCart = (item) => {
+    addToCart(item);
+    toast.success("🛒 Item added to cart!");
+  };
+
   return (
-    <div className="p-4 max-w-4xl mx-auto">
-      <h1 className="text-2xl font-bold mb-4 text-center">Welcome to Hacker Cafe</h1>
+    <div className="min-h-screen bg-[#fff8f0] px-4 py-6">
+      {/* 🔥 Banner Section */}
+      {banners.length > 0 && (
+        <div className="mb-6">
+          {banners.map((banner) => (
+            <img
+              key={banner.id}
+              src={banner.image}
+              alt="Banner"
+              className="w-full h-48 md:h-64 object-cover rounded-xl shadow"
+            />
+          ))}
+        </div>
+      )}
 
-      {/* 🔸 Category Scroller */}
-      <div className="flex overflow-x-auto gap-4 pb-2 mb-6">
-        {categories.map((cat) => (
-          <Link to={`/category/${cat.name}`} key={cat.id}>
-            <div className="min-w-[120px] bg-white shadow rounded-xl p-3 text-center hover:scale-105 transition">
-              <img
-                src={cat.image}
-                alt={cat.name}
-                className="w-16 h-16 object-cover mx-auto rounded-full mb-2"
-              />
-              <p className="text-sm font-medium">{cat.name}</p>
-            </div>
-          </Link>
-        ))}
-      </div>
+      {/* 🔥 Categories Section */}
+      {categories.length > 0 && (
+        <div className="mb-8">
+          <h2 className="text-2xl font-semibold mb-4 text-[#ff5733]">🍽️ Categories</h2>
+          <div className="flex overflow-x-auto gap-4 pb-2">
+            {categories.map((cat) => (
+              <Link to={`/category/${cat.name}`} key={cat.id}>
+                <div className="min-w-[120px] bg-white shadow rounded-xl p-3 text-center hover:scale-105 transition">
+                  <img
+                    src={cat.image}
+                    alt={cat.name}
+                    className="w-16 h-16 object-cover mx-auto rounded-full mb-2"
+                  />
+                  <p className="text-sm font-medium">{cat.name}</p>
+                </div>
+              </Link>
+            ))}
+          </div>
+        </div>
+      )}
 
-      {/* 🔸 Menu Grid */}
-      <div className="grid grid-cols-2 sm:grid-cols-3 gap-4">
-        {menuItems.map((item) => (
-          <div key={item.id} className="bg-white rounded-xl shadow p-3">
+      {/* 🔥 Products Section */}
+      <h1 className="text-3xl md:text-4xl font-bold text-center text-[#ff5733] mb-8">
+        🍕 Our Menu
+      </h1>
+
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 max-w-6xl mx-auto">
+        {products.map((item) => (
+          <div
+            key={item.id}
+            className="bg-white rounded-2xl shadow-lg overflow-hidden hover:scale-105 transition"
+          >
             <img
               src={item.image}
               alt={item.name}
-              className="w-full h-24 object-cover rounded-md mb-2"
+              className="w-full h-40 object-cover"
             />
-            <h3 className="text-sm font-semibold">{item.name}</h3>
-            <p className="text-sm text-gray-500 mb-2">₹{item.price}</p>
-            <button
-              onClick={() => addToCart(item)}
-              className="text-xs px-2 py-1 bg-black text-white rounded hover:bg-gray-800"
-            >
-              Add to Cart
-            </button>
+            <div className="p-4">
+              <h2 className="text-xl font-semibold text-gray-800">{item.name}</h2>
+              <p className="text-sm text-gray-600 mt-1">{item.description}</p>
+              <div className="flex justify-between items-center mt-3">
+                <span className="text-lg font-bold text-[#ff5733]">₹{item.price}</span>
+                <button
+                  onClick={() => handleAddToCart(item)}
+                  className="bg-[#ff5733] text-white px-3 py-1 rounded-full text-sm hover:bg-[#e74c3c] transition"
+                >
+                  Add to Cart
+                </button>
+              </div>
+            </div>
           </div>
         ))}
       </div>
