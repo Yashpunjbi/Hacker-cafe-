@@ -34,6 +34,7 @@ const App = () => {
 
   return (
     <CartProvider>
+      <ToastContainer position="bottom-center" autoClose={3000} />
       <Router>
         <Navbar user={user} />
         <div className="pb-20 pt-16">
@@ -51,7 +52,6 @@ const App = () => {
           </Routes>
         </div>
         <BottomNavbar />
-        <ToastContainer position="bottom-center" />
       </Router>
     </CartProvider>
   );
