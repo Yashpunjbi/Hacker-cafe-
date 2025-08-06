@@ -4,6 +4,8 @@ import { getAuth, onAuthStateChanged } from "firebase/auth";
 import LoginModal from "./LoginModal";
 import UserMenu from "./UserMenu";
 
+const auth = getAuth();
+
 const Navbar = () => {
   const { pathname } = useLocation();
   const [isLoginOpen, setIsLoginOpen] = useState(false);
@@ -17,7 +19,6 @@ const Navbar = () => {
   ];
 
   useEffect(() => {
-    const auth = getAuth();
     const unsubscribe = onAuthStateChanged(auth, (currentUser) => {
       setUser(currentUser);
     });
@@ -40,7 +41,7 @@ const Navbar = () => {
           </Link>
         ))}
 
-        {/* Profile or Login */}
+        {/* 👤 Profile or 🔐 Login */}
         {user ? (
           <div className="relative">
             <button
@@ -50,9 +51,7 @@ const Navbar = () => {
               <span className="text-xl">👤</span>
               Profile
             </button>
-            {showUserMenu && (
-              <UserMenu user={user} onLogout={() => setShowUserMenu(false)} />
-            )}
+            {showUserMenu && <UserMenu user={user} />}
           </div>
         ) : (
           <button
@@ -65,7 +64,7 @@ const Navbar = () => {
         )}
       </nav>
 
-      {/* Login Modal */}
+      {/* 🔓 Login Modal */}
       {isLoginOpen && <LoginModal onClose={() => setIsLoginOpen(false)} />}
     </>
   );
