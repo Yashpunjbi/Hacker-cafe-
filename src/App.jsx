@@ -14,6 +14,7 @@ import Login from "./pages/Login";
 import Track from "./pages/Track";
 import Contact from "./pages/Contact";
 import Terms from "./pages/Terms";
+import CategoryMenu from "./pages/CategoryMenu";
 
 import BottomNavbar from "./components/BottomNav";
 import Navbar from "./components/Navbar";
@@ -49,6 +50,7 @@ const App = () => {
             <Route path="/contact" element={<Contact />} />
             <Route path="/terms" element={<Terms />} />
             <Route path="/login" element={<Login />} />
+ <Route path="/category/:categoryName" element={<CategoryMenu />} />
           </Routes>
         </div>
         <BottomNavbar />
