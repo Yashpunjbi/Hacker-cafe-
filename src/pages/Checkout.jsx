@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from "react";
 import { useCart } from "../context/CartContext";
 import { db, auth } from "../firebase";
@@ -13,7 +14,9 @@ const Checkout = () => {
   const [email, setEmail] = useState("");
   const navigate = useNavigate();
 
-  const total = cart.reduce((acc, item) => acc + item.price * item.qty, 0);
+  const deliveryCharge = 30;
+  const itemsTotal = cart.reduce((acc, item) => acc + item.price * item.qty, 0);
+  const totalAmount = itemsTotal + deliveryCharge;
 
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, (user) => {
@@ -38,7 +41,9 @@ const Checkout = () => {
       phone,
       email,
       items: cart,
-      total,
+      itemsTotal,
+      deliveryCharge,
+      total: totalAmount,
       status: "Placed",
       createdAt: serverTimestamp(),
     };
@@ -55,65 +60,60 @@ const Checkout = () => {
   };
 
   return (
-    <div className="max-w-xl mx-auto p-6 bg-white rounded-lg shadow mt-6">
-      <h2 className="text-3xl font-bold text-center text-pink-600 mb-6">
-        🚀 Confirm Your Order
+    <div className="max-w-md mx-auto p-6 bg-white rounded shadow mt-6">
+      <h2 className="text-2xl font-bold text-center text-pink-600 mb-4">
+        Checkout
       </h2>
+      <form onSubmit={handleOrder} className="space-y-4">
+        <input
+          type="text"
+          placeholder="Your Name"
+          className="w-full p-2 border rounded"
+          value={name}
+          onChange={(e) => setName(e.target.value)}
+        />
+        <textarea
+          placeholder="Delivery Address"
+          className="w-full p-2 border rounded"
+          value={address}
+          onChange={(e) => setAddress(e.target.value)}
+        />
+        <input
+          type="tel"
+          placeholder="Phone Number"
+          className="w-full p-2 border rounded"
+          value={phone}
+          onChange={(e) => setPhone(e.target.value)}
+        />
+        <input
+          type="email"
+          value={email}
+          readOnly
+          className="w-full p-2 border rounded bg-gray-100 cursor-not-allowed"
+        />
 
-      {cart.length === 0 ? (
-        <p className="text-center text-gray-500">Cart is empty!</p>
-      ) : (
-        <>
-          <div className="bg-gray-50 p-4 rounded-lg mb-6">
-            <h3 className="text-lg font-semibold mb-2 text-gray-800">Order Summary</h3>
-            <ul className="space-y-2">
-              {cart.map((item) => (
-                <li key={item.id} className="flex justify-between text-sm text-gray-700">
-                  <span>{item.name} × {item.qty}</span>
-                  <span>₹{item.price * item.qty}</span>
-                </li>
-              ))}
-            </ul>
-            <div className="flex justify-between mt-4 font-bold text-lg text-gray-900">
-              <span>Total:</span>
-              <span>₹{total}</span>
-            </div>
+        <div className="text-sm text-gray-600 mt-4">
+          <div className="flex justify-between mb-1">
+            <span>Items Total:</span>
+            <span>₹{itemsTotal}</span>
           </div>
+          <div className="flex justify-between mb-1">
+            <span>Delivery Charge:</span>
+            <span>₹{deliveryCharge}</span>
+          </div>
+          <div className="flex justify-between font-semibold text-black border-t pt-2">
+            <span>Total Payable:</span>
+            <span>₹{totalAmount}</span>
+          </div>
+        </div>
 
-          <form onSubmit={handleOrder} className="space-y-4">
-            <input
-              type="text"
-              placeholder="Your Full Name"
-              className="w-full p-3 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-pink-400"
-              value={name}
-              onChange={(e) => setName(e.target.value)}
-              required
-            />
-            <textarea
-              placeholder="Delivery Address"
-              className="w-full p-3 border border-gray-300 rounded h-24 resize-none focus:outline-none focus:ring-2 focus:ring-pink-400"
-              value={address}
-              onChange={(e) => setAddress(e.target.value)}
-              required
-            />
-            <input
-              type="tel"
-              placeholder="Phone Number"
-              className="w-full p-3 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-pink-400"
-              value={phone}
-              onChange={(e) => setPhone(e.target.value)}
-              required
-            />
-
-            <button
-              type="submit"
-              className="w-full bg-pink-600 hover:bg-pink-700 text-white py-3 rounded-lg font-semibold transition"
-            >
-              ✅ Place Order — ₹{total}
-            </button>
-          </form>
-        </>
-      )}
+        <button
+          type="submit"
+          className="w-full bg-pink-600 text-white p-2 rounded mt-4"
+        >
+          Place Order
+        </button>
+      </form>
     </div>
   );
 };
