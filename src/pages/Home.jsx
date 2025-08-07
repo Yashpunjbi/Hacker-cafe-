@@ -23,8 +23,15 @@ const Home = () => {
     });
 
     const unsubProducts = onSnapshot(collection(db, "products"), (snapshot) => {
-      const data = snapshot.docs.map((doc) => ({ id: doc.id, ...doc.data() }));
-      setProducts(data);
+      const allProducts = snapshot.docs.map((doc) => ({ id: doc.id, ...doc.data() }));
+
+      // ✅ Filter: sirf "home" category wale products hi dikhao
+      const homeProducts = allProducts.filter(
+        (item) =>
+          item.category?.toLowerCase().includes("home") // also works with ["home", "pizza"]
+      );
+
+      setProducts(homeProducts);
     });
 
     return () => {
@@ -81,33 +88,37 @@ const Home = () => {
         🍕 Our Menu
       </h1>
 
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 max-w-6xl mx-auto">
-        {products.map((item) => (
-          <div
-            key={item.id}
-            className="bg-white rounded-2xl shadow-lg overflow-hidden hover:scale-105 transition"
-          >
-            <img
-              src={item.image}
-              alt={item.name}
-              className="w-full h-40 object-cover"
-            />
-            <div className="p-4">
-              <h2 className="text-xl font-semibold text-gray-800">{item.name}</h2>
-              <p className="text-sm text-gray-600 mt-1">{item.description}</p>
-              <div className="flex justify-between items-center mt-3">
-                <span className="text-lg font-bold text-[#ff5733]">₹{item.price}</span>
-                <button
-                  onClick={() => handleAddToCart(item)}
-                  className="bg-[#ff5733] text-white px-3 py-1 rounded-full text-sm hover:bg-[#e74c3c] transition"
-                >
-                  Add to Cart
-                </button>
+      {products.length === 0 ? (
+        <p className="text-center text-gray-500">No items found for home menu.</p>
+      ) : (
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 max-w-6xl mx-auto">
+          {products.map((item) => (
+            <div
+              key={item.id}
+              className="bg-white rounded-2xl shadow-lg overflow-hidden hover:scale-105 transition"
+            >
+              <img
+                src={item.image}
+                alt={item.name}
+                className="w-full h-40 object-cover"
+              />
+              <div className="p-4">
+                <h2 className="text-xl font-semibold text-gray-800">{item.name}</h2>
+                <p className="text-sm text-gray-600 mt-1">{item.description}</p>
+                <div className="flex justify-between items-center mt-3">
+                  <span className="text-lg font-bold text-[#ff5733]">₹{item.price}</span>
+                  <button
+                    onClick={() => handleAddToCart(item)}
+                    className="bg-[#ff5733] text-white px-3 py-1 rounded-full text-sm hover:bg-[#e74c3c] transition"
+                  >
+                    Add to Cart
+                  </button>
+                </div>
               </div>
             </div>
-          </div>
-        ))}
-      </div>
+          ))}
+        </div>
+      )}
     </div>
   );
 };
