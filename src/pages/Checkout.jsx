@@ -11,7 +11,6 @@ const Checkout = () => {
   const [address, setAddress] = useState("");
   const [phone, setPhone] = useState("");
   const [email, setEmail] = useState("");
-  const [timeSlot, setTimeSlot] = useState("");
   const navigate = useNavigate();
 
   const deliveryCharge = 30;
@@ -30,8 +29,8 @@ const Checkout = () => {
   const handleOrder = async (e) => {
     e.preventDefault();
 
-    if (!name || !address || !phone || !timeSlot || cart.length === 0) {
-      alert("Please fill all details and select a delivery time slot.");
+    if (!name || !address || !phone || cart.length === 0) {
+      alert("Please fill all details before placing the order.");
       return;
     }
 
@@ -44,7 +43,6 @@ const Checkout = () => {
       itemsTotal,
       deliveryCharge,
       total: totalAmount,
-      timeSlot,
       status: "Placed",
       createdAt: serverTimestamp(),
     };
@@ -121,17 +119,6 @@ const Checkout = () => {
           readOnly
           className="w-full p-2 border rounded bg-gray-100 cursor-not-allowed"
         />
-        <select
-          value={timeSlot}
-          onChange={(e) => setTimeSlot(e.target.value)}
-          className="w-full p-2 border rounded"
-        >
-          <option value="">Select Delivery Time Slot</option>
-          <option value="12:00 PM – 2:00 PM">12:00 PM – 2:00 PM</option>
-          <option value="2:00 PM – 4:00 PM">2:00 PM – 4:00 PM</option>
-          <option value="4:00 PM – 6:00 PM">4:00 PM – 6:00 PM</option>
-          <option value="6:00 PM – 8:00 PM">6:00 PM – 8:00 PM</option>
-        </select>
 
         <div className="text-sm text-gray-600 mt-4">
           <div className="flex justify-between mb-1">
