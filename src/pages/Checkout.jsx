@@ -11,11 +11,14 @@ const Checkout = () => {
   const [address, setAddress] = useState("");
   const [phone, setPhone] = useState("");
   const [email, setEmail] = useState("");
+  const [promoCode, setPromoCode] = useState("");
+  const [discount, setDiscount] = useState(0);
+  const [promoApplied, setPromoApplied] = useState(false);
   const navigate = useNavigate();
 
   const deliveryCharge = 30;
   const itemsTotal = cart.reduce((acc, item) => acc + item.price * item.qty, 0);
-  const totalAmount = itemsTotal + deliveryCharge;
+  const totalAmount = itemsTotal + deliveryCharge - discount;
 
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, (user) => {
@@ -26,11 +29,30 @@ const Checkout = () => {
     return () => unsubscribe();
   }, []);
 
+  const handleApplyPromo = () => {
+    const code = promoCode.trim().toLowerCase();
+
+    if (promoApplied) {
+      alert("Promo code already applied!");
+      return;
+    }
+
+    if (code === "free30") {
+      setDiscount(30);
+      setPromoApplied(true);
+    } else if (code === "save50") {
+      setDiscount(50);
+      setPromoApplied(true);
+    } else {
+      alert("Invalid promo code!");
+    }
+  };
+
   const handleOrder = async (e) => {
     e.preventDefault();
 
     if (!name || !address || !phone || cart.length === 0) {
-      alert("Please fill all details before placing the order.");
+      alert("Please fill all details.");
       return;
     }
 
@@ -42,6 +64,7 @@ const Checkout = () => {
       items: cart,
       itemsTotal,
       deliveryCharge,
+      discount,
       total: totalAmount,
       status: "Placed",
       createdAt: serverTimestamp(),
@@ -120,6 +143,25 @@ const Checkout = () => {
           className="w-full p-2 border rounded bg-gray-100 cursor-not-allowed"
         />
 
+        {/* 🎟️ PROMO CODE */}
+        <div className="flex gap-2 items-center">
+          <input
+            type="text"
+            placeholder="Promo Code"
+            className="flex-1 p-2 border rounded"
+            value={promoCode}
+            onChange={(e) => setPromoCode(e.target.value)}
+          />
+          <button
+            type="button"
+            onClick={handleApplyPromo}
+            className="bg-green-600 text-white px-4 py-2 rounded"
+          >
+            Apply
+          </button>
+        </div>
+
+        {/* 💰 TOTAL */}
         <div className="text-sm text-gray-600 mt-4">
           <div className="flex justify-between mb-1">
             <span>Items Total:</span>
@@ -129,6 +171,12 @@ const Checkout = () => {
             <span>Delivery Charge:</span>
             <span>₹{deliveryCharge}</span>
           </div>
+          {discount > 0 && (
+            <div className="flex justify-between mb-1 text-green-600">
+              <span>Promo Discount:</span>
+              <span>- ₹{discount}</span>
+            </div>
+          )}
           <div className="flex justify-between font-semibold text-black border-t pt-2">
             <span>Total Payable:</span>
             <span>₹{totalAmount}</span>
