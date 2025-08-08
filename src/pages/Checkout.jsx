@@ -1,7 +1,14 @@
 import React, { useState, useEffect } from "react";
 import { useCart } from "../context/CartContext";
 import { db, auth } from "../firebase";
-import { collection, addDoc, serverTimestamp } from "firebase/firestore";
+import {
+  collection,
+  addDoc,
+  serverTimestamp,
+  getDocs,
+  query,
+  where,
+} from "firebase/firestore";
 import { onAuthStateChanged } from "firebase/auth";
 import { useNavigate } from "react-router-dom";
 
@@ -14,6 +21,7 @@ const Checkout = () => {
   const [promoCode, setPromoCode] = useState("");
   const [discount, setDiscount] = useState(0);
   const [promoApplied, setPromoApplied] = useState(false);
+  const [checkingPromo, setCheckingPromo] = useState(false);
   const navigate = useNavigate();
 
   const deliveryCharge = 30;
@@ -29,23 +37,57 @@ const Checkout = () => {
     return () => unsubscribe();
   }, []);
 
-  const handleApplyPromo = () => {
-    const code = promoCode.trim().toLowerCase();
-
+  const handleApplyPromo = async () => {
     if (promoApplied) {
       alert("Promo code already applied!");
       return;
     }
 
+    const code = promoCode.trim().toLowerCase();
+    setCheckingPromo(true);
+
+    // Static promo codes
     if (code === "free30") {
       setDiscount(30);
       setPromoApplied(true);
-    } else if (code === "save50") {
+      alert("Promo applied: ₹30 off");
+      setCheckingPromo(false);
+      return;
+    }
+
+    if (code === "save50") {
       setDiscount(50);
       setPromoApplied(true);
-    } else {
-      alert("Invalid promo code!");
+      alert("Promo applied: ₹50 off");
+      setCheckingPromo(false);
+      return;
     }
+
+    try {
+      const promoRef = collection(db, "promoCodes");
+      const q = query(promoRef, where("code", "==", code));
+      const snapshot = await getDocs(q);
+
+      if (snapshot.empty) {
+        alert("Invalid promo code!");
+      } else {
+        const promoData = snapshot.docs[0].data();
+        const promoDiscount = parseInt(promoData.discount) || 0;
+
+        if (promoDiscount > 0) {
+          setDiscount(promoDiscount);
+          setPromoApplied(true);
+          alert(`Promo applied: ₹${promoDiscount} off`);
+        } else {
+          alert("Invalid discount value in promo code.");
+        }
+      }
+    } catch (error) {
+      console.error("Error checking promo code:", error);
+      alert("Something went wrong!");
+    }
+
+    setCheckingPromo(false);
   };
 
   const handleOrder = async (e) => {
@@ -85,7 +127,7 @@ const Checkout = () => {
     <div className="max-w-2xl mx-auto p-6 bg-white rounded shadow mt-6">
       <h2 className="text-2xl font-bold text-center text-pink-600 mb-4">Checkout</h2>
 
-      {/* 🛒 CART ITEMS PREVIEW */}
+      {/* 🛒 CART ITEMS */}
       <div className="mb-4">
         <h3 className="text-lg font-semibold mb-2 text-gray-700">Your Cart</h3>
         {cart.length === 0 ? (
@@ -93,10 +135,7 @@ const Checkout = () => {
         ) : (
           <ul className="space-y-3">
             {cart.map((item, index) => (
-              <li
-                key={index}
-                className="flex items-center gap-4 p-2 border rounded-md"
-              >
+              <li key={index} className="flex items-center gap-4 p-2 border rounded-md">
                 <img
                   src={item.image}
                   alt={item.name}
@@ -151,13 +190,15 @@ const Checkout = () => {
             className="flex-1 p-2 border rounded"
             value={promoCode}
             onChange={(e) => setPromoCode(e.target.value)}
+            disabled={promoApplied}
           />
           <button
             type="button"
             onClick={handleApplyPromo}
+            disabled={promoApplied || checkingPromo}
             className="bg-green-600 text-white px-4 py-2 rounded"
           >
-            Apply
+            {checkingPromo ? "Checking..." : promoApplied ? "Applied" : "Apply"}
           </button>
         </div>
 
