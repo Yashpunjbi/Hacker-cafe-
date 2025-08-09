@@ -15,6 +15,7 @@ import Track from "./pages/Track";
 import Contact from "./pages/Contact";
 import Terms from "./pages/Terms";
 import CategoryMenu from "./pages/CategoryMenu";
+import PaymentOptions from "./pages/PaymentOptions";
 
 import BottomNavbar from "./components/BottomNav";
 import Navbar from "./components/Navbar";
@@ -51,6 +52,7 @@ const App = () => {
             <Route path="/terms" element={<Terms />} />
             <Route path="/login" element={<Login />} />
  <Route path="/category/:categoryName" element={<CategoryMenu />} />
+<Route path="/payment-options" element={<PaymentOptions />} />
           </Routes>
         </div>
         <BottomNavbar />
