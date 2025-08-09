@@ -1,78 +1,78 @@
-import React from "react";
-import { useCart } from "../context/CartContext";
-import { Link } from "react-router-dom";
+import { useState } from "react";
+import { db } from "../firebase";
+import { collection, query, where, getDocs, Timestamp } from "firebase/firestore";
 
-const Cart = () => {
-  const { cart, removeFromCart, updateQty } = useCart();
-  const total = cart.reduce((acc, item) => acc + item.price * item.qty, 0);
+export default function Cart() {
+  const [promoCode, setPromoCode] = useState("");
+  const [discount, setDiscount] = useState(0);
+  const [error, setError] = useState("");
+
+  const cartTotal = 500; // example total amount
+
+  const applyPromo = async () => {
+    if (!promoCode.trim()) {
+      setError("Please enter a promo code");
+      return;
+    }
+
+    try {
+      const promoRef = collection(db, "promoCodes");
+      const q = query(promoRef, where("code", "==", promoCode.trim()));
+      const querySnapshot = await getDocs(q);
+
+      if (querySnapshot.empty) {
+        setError("Invalid promo code");
+        setDiscount(0);
+        return;
+      }
+
+      const promoData = querySnapshot.docs[0].data();
+
+      // Check expiry date
+      if (promoData.expiryDate && promoData.expiryDate.toDate() < new Date()) {
+        setError("Promo code expired");
+        setDiscount(0);
+        return;
+      }
+
+      // Check min order value
+      if (promoData.minOrderValue && cartTotal < promoData.minOrderValue) {
+        setError(`Minimum order value is ₹${promoData.minOrderValue}`);
+        setDiscount(0);
+        return;
+      }
+
+      // Apply discount
+      if (promoData.discountType === "percentage") {
+        const discountAmount = (cartTotal * promoData.discountValue) / 100;
+        setDiscount(discountAmount);
+      } else if (promoData.discountType === "flat") {
+        setDiscount(promoData.discountValue);
+      }
+
+      setError("");
+    } catch (err) {
+      console.error(err);
+      setError("Error applying promo code");
+    }
+  };
 
   return (
-    <div className="p-4 max-w-3xl mx-auto">
-      <h2 className="text-2xl font-bold mb-6 text-pink-600">🛒 Your Cart</h2>
+    <div>
+      <h2>Cart</h2>
+      <p>Total: ₹{cartTotal}</p>
 
-      {cart.length === 0 ? (
-        <p className="text-gray-500 text-center">Your cart is empty.</p>
-      ) : (
-        <>
-          <div className="space-y-4">
-            {cart.map((item) => (
-              <div
-                key={item.id}
-                className="bg-white rounded-lg shadow flex flex-col sm:flex-row gap-4 p-4"
-              >
-                <img
-                  src={item.image}
-                  alt={item.name}
-                  className="w-full sm:w-28 h-28 object-cover rounded"
-                />
-                <div className="flex-1">
-                  <div className="flex justify-between items-start">
-                    <div>
-                      <h3 className="text-lg font-semibold">{item.name}</h3>
-                      <p className="text-sm text-gray-600">₹{item.price}</p>
-                    </div>
-                    <button
-                      onClick={() => removeFromCart(item.id)}
-                      className="text-red-500 hover:text-red-700 text-xl"
-                      title="Remove item"
-                    >
-                      ❌
-                    </button>
-                  </div>
+      <input
+        type="text"
+        placeholder="Enter Promo Code"
+        value={promoCode}
+        onChange={(e) => setPromoCode(e.target.value)}
+      />
+      <button onClick={applyPromo}>Apply</button>
 
-                  <div className="flex items-center mt-3 gap-2">
-                    <button
-                      onClick={() => updateQty(item.id, item.qty - 1)}
-                      className="px-3 py-1 bg-gray-200 hover:bg-gray-300 rounded text-lg"
-                    >
-                      −
-                    </button>
-                    <span className="text-md font-medium">{item.qty}</span>
-                    <button
-                      onClick={() => updateQty(item.id, item.qty + 1)}
-                      className="px-3 py-1 bg-gray-200 hover:bg-gray-300 rounded text-lg"
-                    >
-                      +
-                    </button>
-                  </div>
-                </div>
-              </div>
-            ))}
-          </div>
-
-          <div className="mt-8 border-t pt-4 text-right">
-            <h3 className="text-xl font-bold mb-2">Total: ₹{total}</h3>
-            <Link
-              to="/checkout"
-              className="inline-block bg-pink-600 hover:bg-pink-700 text-white font-medium px-6 py-2 rounded-lg transition"
-            >
-              Proceed to Checkout
-            </Link>
-          </div>
-        </>
-      )}
+      {error && <p style={{ color: "red" }}>{error}</p>}
+      {discount > 0 && <p style={{ color: "green" }}>Discount Applied: ₹{discount}</p>}
+      <p>Final Total: ₹{cartTotal - discount}</p>
     </div>
   );
-};
-
-export default Cart;
+}
