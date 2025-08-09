@@ -1,112 +1,226 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
+import { useCart } from "../context/CartContext";
+import { db, auth } from "../firebase";
+import { collection, getDocs, query, where } from "firebase/firestore";
+import { onAuthStateChanged } from "firebase/auth";
 import { useNavigate } from "react-router-dom";
 
 const Checkout = () => {
+  const { cart } = useCart();
+  const [name, setName] = useState("");
+  const [address, setAddress] = useState("");
+  const [phone, setPhone] = useState("");
+  const [email, setEmail] = useState("");
+  const [promoCode, setPromoCode] = useState("");
+  const [discount, setDiscount] = useState(0);
+  const [promoApplied, setPromoApplied] = useState(false);
+  const [checkingPromo, setCheckingPromo] = useState(false);
   const navigate = useNavigate();
-  const [formData, setFormData] = useState({
-    name: "",
-    phone: "",
-    address: "",
-    landmark: "",
-    city: "",
-    pincode: "",
-  });
 
-  const handleChange = (e) => {
-    setFormData({ ...formData, [e.target.name]: e.target.value });
+  const deliveryCharge = 30;
+  const itemsTotal = cart.reduce((acc, item) => acc + item.price * item.qty, 0);
+  const totalAmount = itemsTotal + deliveryCharge - discount;
+
+  useEffect(() => {
+    const unsubscribe = onAuthStateChanged(auth, (user) => {
+      if (user) {
+        setEmail(user.email);
+      }
+    });
+    return () => unsubscribe();
+  }, []);
+
+  const handleApplyPromo = async () => {
+    if (promoApplied) {
+      alert("Promo code already applied!");
+      return;
+    }
+
+    const code = promoCode.trim().toLowerCase();
+    setCheckingPromo(true);
+
+    if (code === "free30") {
+      setDiscount(30);
+      setPromoApplied(true);
+      alert("Promo applied: ₹30 off");
+      setCheckingPromo(false);
+      return;
+    }
+
+    if (code === "save50") {
+      setDiscount(50);
+      setPromoApplied(true);
+      alert("Promo applied: ₹50 off");
+      setCheckingPromo(false);
+      return;
+    }
+
+    try {
+      const promoRef = collection(db, "promoCodes");
+      const q = query(promoRef, where("code", "==", code));
+      const snapshot = await getDocs(q);
+
+      if (snapshot.empty) {
+        alert("Invalid promo code!");
+      } else {
+        const promoData = snapshot.docs[0].data();
+        const promoDiscount = parseInt(promoData.discount) || 0;
+
+        if (promoDiscount > 0) {
+          setDiscount(promoDiscount);
+          setPromoApplied(true);
+          alert(`Promo applied: ₹${promoDiscount} off`);
+        } else {
+          alert("Invalid discount value in promo code.");
+        }
+      }
+    } catch (error) {
+      console.error("Error checking promo code:", error);
+      alert("Something went wrong!");
+    }
+
+    setCheckingPromo(false);
+  };
+
+  const handleContinuePayment = (e) => {
+    e.preventDefault();
+
+    if (!name || !address || !phone || cart.length === 0) {
+      alert("Please fill all details.");
+      return;
+    }
+
+    navigate("/payment-options", {
+      state: {
+        name,
+        address,
+        phone,
+        email,
+        cart,
+        itemsTotal,
+        deliveryCharge,
+        discount,
+        totalAmount,
+      },
+    });
   };
 
   return (
-    <div className="min-h-screen bg-gray-100 py-6">
-      <div className="max-w-2xl mx-auto bg-white p-6 rounded shadow">
-        <h2 className="text-2xl font-bold mb-4 text-gray-800">Checkout</h2>
+    <div className="max-w-2xl mx-auto p-6 bg-white rounded shadow mt-6">
+      <h2 className="text-2xl font-bold text-center text-pink-600 mb-4">Checkout</h2>
 
-        {/* Name */}
-        <div className="mb-4">
-          <label className="block text-gray-700 mb-1">Full Name</label>
+      {/* 🛒 CART ITEMS */}
+      <div className="mb-4">
+        <h3 className="text-lg font-semibold mb-2 text-gray-700">Your Cart</h3>
+        {cart.length === 0 ? (
+          <p className="text-gray-500">Cart is empty.</p>
+        ) : (
+          <ul className="space-y-3">
+            {cart.map((item, index) => (
+              <li
+                key={index}
+                className="flex items-center gap-4 p-2 border rounded-md"
+              >
+                <img
+                  src={item.image}
+                  alt={item.name}
+                  className="w-16 h-16 object-cover rounded"
+                />
+                <div className="flex-1">
+                  <h4 className="font-semibold text-gray-800">{item.name}</h4>
+                  <p className="text-sm text-gray-600">
+                    {item.qty} x ₹{item.price} = ₹{item.qty * item.price}
+                  </p>
+                </div>
+              </li>
+            ))}
+          </ul>
+        )}
+      </div>
+
+      {/* 🧾 ORDER FORM */}
+      <form onSubmit={handleContinuePayment} className="space-y-4">
+        <input
+          type="text"
+          placeholder="Your Name"
+          className="w-full p-2 border rounded"
+          value={name}
+          onChange={(e) => setName(e.target.value)}
+        />
+        <textarea
+          placeholder="Delivery Address"
+          className="w-full p-2 border rounded"
+          value={address}
+          onChange={(e) => setAddress(e.target.value)}
+        />
+        <input
+          type="tel"
+          placeholder="Phone Number"
+          className="w-full p-2 border rounded"
+          value={phone}
+          onChange={(e) => setPhone(e.target.value)}
+        />
+        <input
+          type="email"
+          value={email}
+          readOnly
+          className="w-full p-2 border rounded bg-gray-100 cursor-not-allowed"
+        />
+
+        {/* 🎟️ PROMO CODE */}
+        <div className="flex gap-2 items-center">
           <input
             type="text"
-            name="name"
-            value={formData.name}
-            onChange={handleChange}
-            className="w-full border p-2 rounded"
-            placeholder="Enter your name"
+            placeholder="Promo Code"
+            className="flex-1 p-2 border rounded"
+            value={promoCode}
+            onChange={(e) => setPromoCode(e.target.value)}
+            disabled={promoApplied}
           />
+          <button
+            type="button"
+            onClick={handleApplyPromo}
+            disabled={promoApplied || checkingPromo}
+            className="bg-green-600 text-white px-4 py-2 rounded"
+          >
+            {checkingPromo
+              ? "Checking..."
+              : promoApplied
+              ? "Applied"
+              : "Apply"}
+          </button>
         </div>
 
-        {/* Phone */}
-        <div className="mb-4">
-          <label className="block text-gray-700 mb-1">Phone Number</label>
-          <input
-            type="tel"
-            name="phone"
-            value={formData.phone}
-            onChange={handleChange}
-            className="w-full border p-2 rounded"
-            placeholder="Enter your phone number"
-          />
+        {/* 💰 TOTAL */}
+        <div className="text-sm text-gray-600 mt-4">
+          <div className="flex justify-between mb-1">
+            <span>Items Total:</span>
+            <span>₹{itemsTotal}</span>
+          </div>
+          <div className="flex justify-between mb-1">
+            <span>Delivery Charge:</span>
+            <span>₹{deliveryCharge}</span>
+          </div>
+          {discount > 0 && (
+            <div className="flex justify-between mb-1 text-green-600">
+              <span>Promo Discount:</span>
+              <span>- ₹{discount}</span>
+            </div>
+          )}
+          <div className="flex justify-between font-semibold text-black border-t pt-2">
+            <span>Total Payable:</span>
+            <span>₹{totalAmount}</span>
+          </div>
         </div>
 
-        {/* Address */}
-        <div className="mb-4">
-          <label className="block text-gray-700 mb-1">Address</label>
-          <textarea
-            name="address"
-            value={formData.address}
-            onChange={handleChange}
-            className="w-full border p-2 rounded"
-            placeholder="Enter your address"
-          ></textarea>
-        </div>
-
-        {/* Landmark */}
-        <div className="mb-4">
-          <label className="block text-gray-700 mb-1">Landmark</label>
-          <input
-            type="text"
-            name="landmark"
-            value={formData.landmark}
-            onChange={handleChange}
-            className="w-full border p-2 rounded"
-            placeholder="Nearby landmark"
-          />
-        </div>
-
-        {/* City */}
-        <div className="mb-4">
-          <label className="block text-gray-700 mb-1">City</label>
-          <input
-            type="text"
-            name="city"
-            value={formData.city}
-            onChange={handleChange}
-            className="w-full border p-2 rounded"
-            placeholder="Enter your city"
-          />
-        </div>
-
-        {/* Pincode */}
-        <div className="mb-4">
-          <label className="block text-gray-700 mb-1">Pincode</label>
-          <input
-            type="text"
-            name="pincode"
-            value={formData.pincode}
-            onChange={handleChange}
-            className="w-full border p-2 rounded"
-            placeholder="Enter pincode"
-          />
-        </div>
-
-        {/* Continue to Payment Button */}
+        {/* Continue Button */}
         <button
-          type="button"
-          onClick={() => navigate("/payment-options", { state: { formData } })}
-          className="w-full bg-pink-600 hover:bg-pink-700 text-white p-2 rounded mt-4 transition duration-200"
+          type="submit"
+          className="w-full bg-pink-600 text-white p-2 rounded mt-4"
         >
           Continue to Payment
         </button>
-      </div>
+      </form>
     </div>
   );
 };
