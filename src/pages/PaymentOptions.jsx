@@ -1,7 +1,14 @@
 import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { db } from "../firebase";
-import { collection, addDoc, serverTimestamp } from "firebase/firestore";
+import {
+  collection,
+  addDoc,
+  serverTimestamp,
+  query,
+  where,
+  getDocs,
+} from "firebase/firestore";
 
 export default function PaymentOptions() {
   const navigate = useNavigate();
@@ -12,13 +19,25 @@ export default function PaymentOptions() {
   const [isApplying, setIsApplying] = useState(false);
 
   const cartItems = JSON.parse(localStorage.getItem("cartItems")) || [];
-  const totalAmount = cartItems.reduce((sum, item) => sum + item.price * item.quantity, 0);
-  const finalAmount = totalAmount - discount;
+  const totalAmount = cartItems.reduce(
+    (sum, item) => sum + item.price * item.quantity,
+    0
+  );
+  const finalAmount = Math.max(totalAmount - discount, 0);
 
   const applyPromoCode = async () => {
+    if (!promoCode.trim()) {
+      alert("Please enter a promo code");
+      return;
+    }
     setIsApplying(true);
     try {
-      const snapshot = await db.collection("promoCodes").where("code", "==", promoCode).get();
+      const q = query(
+        collection(db, "promoCodes"),
+        where("code", "==", promoCode.trim())
+      );
+      const snapshot = await getDocs(q);
+
       if (!snapshot.empty) {
         const promoData = snapshot.docs[0].data();
         setDiscount(promoData.discount || 0);
@@ -28,6 +47,7 @@ export default function PaymentOptions() {
       }
     } catch (err) {
       console.error("Error applying promo:", err);
+      alert("Something went wrong while applying promo code");
     }
     setIsApplying(false);
   };
@@ -62,8 +82,9 @@ export default function PaymentOptions() {
     <div className="max-w-xl mx-auto p-4">
       <h2 className="text-2xl font-bold mb-4">Choose Payment Method</h2>
 
+      {/* Payment Method */}
       <div className="space-y-3">
-        <label className="block p-3 border rounded cursor-pointer">
+        <label className="block p-3 border rounded cursor-pointer bg-white">
           <input
             type="radio"
             value="COD"
@@ -74,7 +95,7 @@ export default function PaymentOptions() {
           Cash on Delivery
         </label>
 
-        <label className="block p-3 border rounded cursor-pointer">
+        <label className="block p-3 border rounded cursor-pointer bg-white">
           <input
             type="radio"
             value="UPI"
@@ -84,16 +105,19 @@ export default function PaymentOptions() {
           />
           UPI Payment
           {paymentMethod === "UPI" && (
-            <div className="mt-2 p-2 border rounded bg-gray-100">
-              <p className="text-sm">Scan this QR or use UPI ID: <strong>hacker@upi</strong></p>
+            <div className="mt-2 p-3 border rounded bg-gray-100">
+              <p className="text-sm">
+                Scan this QR or use UPI ID:{" "}
+                <strong>hacker@upi</strong>
+              </p>
               <img src="/upi-qr.png" alt="UPI QR" className="w-32 mt-2" />
             </div>
           )}
         </label>
       </div>
 
-      {/* Promo Code Section */}
-      <div className="mt-4 p-3 border rounded">
+      {/* Promo Code */}
+      <div className="mt-4 p-3 border rounded bg-white">
         <h3 className="font-semibold mb-2">Apply Promo Code</h3>
         <div className="flex gap-2">
           <input
@@ -106,23 +130,26 @@ export default function PaymentOptions() {
           <button
             onClick={applyPromoCode}
             disabled={isApplying}
-            className="bg-blue-500 text-white px-4 py-2 rounded"
+            className="bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded"
           >
             {isApplying ? "Applying..." : "Apply"}
           </button>
         </div>
       </div>
 
-      {/* Summary */}
+      {/* Order Summary */}
       <div className="mt-4 p-3 border rounded bg-gray-50">
-        <p>Total: ₹{totalAmount}</p>
-        <p>Discount: ₹{discount}</p>
-        <p className="font-bold">Final Amount: ₹{finalAmount}</p>
+        <p className="text-lg">Total: <strong>₹{totalAmount}</strong></p>
+        <p className="text-green-600">Discount: ₹{discount}</p>
+        <p className="text-lg font-bold">
+          Final Amount: ₹{finalAmount}
+        </p>
       </div>
 
+      {/* Confirm Button */}
       <button
         onClick={confirmOrder}
-        className="mt-4 w-full bg-green-500 text-white py-2 rounded"
+        className="mt-4 w-full bg-green-500 hover:bg-green-600 text-white py-3 rounded text-lg font-semibold"
       >
         Confirm Order
       </button>
