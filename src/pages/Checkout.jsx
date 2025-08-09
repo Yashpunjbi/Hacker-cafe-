@@ -1,91 +1,241 @@
-import React, { useState } from "react";
-import { db } from "../firebase";
-import { collection, query, where, getDocs } from "firebase/firestore";
+import React, { useState, useEffect } from "react";
+import { useCart } from "../context/CartContext";
+import { db, auth } from "../firebase";
+import {
+collection,
+addDoc,
+serverTimestamp,
+getDocs,
+query,
+where,
+} from "firebase/firestore";
+import { onAuthStateChanged } from "firebase/auth";
+import { useNavigate } from "react-router-dom";
 
-export default function Checkout() {
-  const [promoCode, setPromoCode] = useState("");
-  const [discount, setDiscount] = useState(0);
-  const [error, setError] = useState("");
-  const [cartTotal, setCartTotal] = useState(500); // Example total
+const Checkout = () => {
+const { cart, clearCart } = useCart();
+const [name, setName] = useState("");
+const [address, setAddress] = useState("");
+const [phone, setPhone] = useState("");
+const [email, setEmail] = useState("");
+const [promoCode, setPromoCode] = useState("");
+const [discount, setDiscount] = useState(0);
+const [promoApplied, setPromoApplied] = useState(false);
+const [checkingPromo, setCheckingPromo] = useState(false);
+const navigate = useNavigate();
 
-  const applyPromo = async () => {
-    setError("");
-    if (!promoCode.trim()) {
-      setError("Please enter a promo code.");
-      return;
-    }
+const deliveryCharge = 30;
+const itemsTotal = cart.reduce((acc, item) => acc + item.price * item.qty, 0);
+const totalAmount = itemsTotal + deliveryCharge - discount;
 
-    try {
-      const q = query(
-        collection(db, "promoCodes"),
-        where("code", "==", promoCode.toUpperCase()),
-        where("isActive", "==", true)
-      );
-      const querySnapshot = await getDocs(q);
-
-      if (querySnapshot.empty) {
-        setError("Invalid or expired promo code.");
-        return;
-      }
-
-      const promoData = querySnapshot.docs[0].data();
-
-      // Check expiry date
-      if (promoData.expiryDate) {
-        const today = new Date();
-        const expiry = new Date(promoData.expiryDate);
-        if (today > expiry) {
-          setError("Promo code expired.");
-          return;
-        }
-      }
-
-      // Calculate discount
-      let discountAmount = 0;
-      if (promoData.discountType === "percentage") {
-        discountAmount = (cartTotal * promoData.discountValue) / 100;
-      } else if (promoData.discountType === "flat") {
-        discountAmount = promoData.discountValue;
-      }
-
-      setDiscount(discountAmount);
-    } catch (err) {
-      console.error("Error applying promo code:", err);
-      setError("Something went wrong. Try again.");
-    }
-  };
-
-  return (
-    <div className="p-6 max-w-lg mx-auto bg-white rounded shadow">
-      <h2 className="text-2xl font-bold mb-4">Checkout</h2>
-
-      <div className="mb-4">
-        <label className="block font-medium mb-1">Promo Code</label>
-        <div className="flex gap-2">
-          <input
-            type="text"
-            value={promoCode}
-            onChange={(e) => setPromoCode(e.target.value)}
-            placeholder="Enter promo code"
-            className="border rounded px-3 py-2 flex-1"
-          />
-          <button
-            onClick={applyPromo}
-            className="bg-blue-600 text-white px-4 py-2 rounded"
-          >
-            Apply
-          </button>
-        </div>
-        {error && <p className="text-red-500 mt-2">{error}</p>}
-      </div>
-
-      <div className="border-t pt-4">
-        <p>Cart Total: ₹{cartTotal}</p>
-        <p>Discount: ₹{discount}</p>
-        <p className="font-bold">
-          Final Total: ₹{cartTotal - discount}
-        </p>
-      </div>
-    </div>
-  );
+useEffect(() => {
+const unsubscribe = onAuthStateChanged(auth, (user) => {
+if (user) {
+setEmail(user.email);
 }
+});
+return () => unsubscribe();
+}, []);
+
+const handleApplyPromo = async () => {
+if (promoApplied) {
+alert("Promo code already applied!");
+return;
+}
+
+const code = promoCode.trim().toLowerCase();  
+setCheckingPromo(true);  
+
+// Static promo codes  
+if (code === "free30") {  
+  setDiscount(30);  
+  setPromoApplied(true);  
+  alert("Promo applied: ₹30 off");  
+  setCheckingPromo(false);  
+  return;  
+}  
+
+if (code === "save50") {  
+  setDiscount(50);  
+  setPromoApplied(true);  
+  alert("Promo applied: ₹50 off");  
+  setCheckingPromo(false);  
+  return;  
+}  
+
+try {  
+  const promoRef = collection(db, "promoCodes");  
+  const q = query(promoRef, where("code", "==", code));  
+  const snapshot = await getDocs(q);  
+
+  if (snapshot.empty) {  
+    alert("Invalid promo code!");  
+  } else {  
+    const promoData = snapshot.docs[0].data();  
+    const promoDiscount = parseInt(promoData.discount) || 0;  
+
+    if (promoDiscount > 0) {  
+      setDiscount(promoDiscount);  
+      setPromoApplied(true);  
+      alert(`Promo applied: ₹${promoDiscount} off`);  
+    } else {  
+      alert("Invalid discount value in promo code.");  
+    }  
+  }  
+} catch (error) {  
+  console.error("Error checking promo code:", error);  
+  alert("Something went wrong!");  
+}  
+
+setCheckingPromo(false);
+
+};
+
+const handleOrder = async (e) => {
+e.preventDefault();
+
+if (!name || !address || !phone || cart.length === 0) {  
+  alert("Please fill all details.");  
+  return;  
+}  
+
+const orderData = {  
+  name,  
+  address,  
+  phone,  
+  email,  
+  items: cart,  
+  itemsTotal,  
+  deliveryCharge,  
+  discount,  
+  total: totalAmount,  
+  status: "Placed",  
+  createdAt: serverTimestamp(),  
+};  
+
+try {  
+  await addDoc(collection(db, "orders"), orderData);  
+  clearCart();  
+  alert("Order placed successfully!");  
+  navigate("/");  
+} catch (err) {  
+  console.error("Error placing order:", err);  
+  alert("Something went wrong!");  
+}
+
+};
+
+return (
+<div className="max-w-2xl mx-auto p-6 bg-white rounded shadow mt-6">
+<h2 className="text-2xl font-bold text-center text-pink-600 mb-4">Checkout</h2>
+
+{/* 🛒 CART ITEMS */}  
+  <div className="mb-4">  
+    <h3 className="text-lg font-semibold mb-2 text-gray-700">Your Cart</h3>  
+    {cart.length === 0 ? (  
+      <p className="text-gray-500">Cart is empty.</p>  
+    ) : (  
+      <ul className="space-y-3">  
+        {cart.map((item, index) => (  
+          <li key={index} className="flex items-center gap-4 p-2 border rounded-md">  
+            <img  
+              src={item.image}  
+              alt={item.name}  
+              className="w-16 h-16 object-cover rounded"  
+            />  
+            <div className="flex-1">  
+              <h4 className="font-semibold text-gray-800">{item.name}</h4>  
+              <p className="text-sm text-gray-600">  
+                {item.qty} x ₹{item.price} = ₹{item.qty * item.price}  
+              </p>  
+            </div>  
+          </li>  
+        ))}  
+      </ul>  
+    )}  
+  </div>  
+
+  {/* 🧾 ORDER FORM */}  
+  <form onSubmit={handleOrder} className="space-y-4">  
+    <input  
+      type="text"  
+      placeholder="Your Name"  
+      className="w-full p-2 border rounded"  
+      value={name}  
+      onChange={(e) => setName(e.target.value)}  
+    />  
+    <textarea  
+      placeholder="Delivery Address"  
+      className="w-full p-2 border rounded"  
+      value={address}  
+      onChange={(e) => setAddress(e.target.value)}  
+    />  
+    <input  
+      type="tel"  
+      placeholder="Phone Number"  
+      className="w-full p-2 border rounded"  
+      value={phone}  
+      onChange={(e) => setPhone(e.target.value)}  
+    />  
+    <input  
+      type="email"  
+      value={email}  
+      readOnly  
+      className="w-full p-2 border rounded bg-gray-100 cursor-not-allowed"  
+    />  
+
+    {/* 🎟️ PROMO CODE */}  
+    <div className="flex gap-2 items-center">  
+      <input  
+        type="text"  
+        placeholder="Promo Code"  
+        className="flex-1 p-2 border rounded"  
+        value={promoCode}  
+        onChange={(e) => setPromoCode(e.target.value)}  
+        disabled={promoApplied}  
+      />  
+      <button  
+        type="button"  
+        onClick={handleApplyPromo}  
+        disabled={promoApplied || checkingPromo}  
+        className="bg-green-600 text-white px-4 py-2 rounded"  
+      >  
+        {checkingPromo ? "Checking..." : promoApplied ? "Applied" : "Apply"}  
+      </button>  
+    </div>  
+
+    {/* 💰 TOTAL */}  
+    <div className="text-sm text-gray-600 mt-4">  
+      <div className="flex justify-between mb-1">  
+        <span>Items Total:</span>  
+        <span>₹{itemsTotal}</span>  
+      </div>  
+      <div className="flex justify-between mb-1">  
+        <span>Delivery Charge:</span>  
+        <span>₹{deliveryCharge}</span>  
+      </div>  
+      {discount > 0 && (  
+        <div className="flex justify-between mb-1 text-green-600">  
+          <span>Promo Discount:</span>  
+          <span>- ₹{discount}</span>  
+        </div>  
+      )}  
+      <div className="flex justify-between font-semibold text-black border-t pt-2">  
+        <span>Total Payable:</span>  
+        <span>₹{totalAmount}</span>  
+      </div>  
+    </div>  
+
+    <button  
+      type="submit"  
+      className="w-full bg-pink-600 text-white p-2 rounded mt-4"  
+    >  
+      Place Order  
+    </button>  
+  </form>  
+</div>
+
+);
+};
+
+export default Checkout;
