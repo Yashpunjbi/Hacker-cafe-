@@ -1,57 +1,91 @@
 // src/pages/PaymentOptions.jsx
 import React from "react";
-import { useNavigate } from "react-router-dom";
+import { useLocation, useNavigate } from "react-router-dom";
 
 export default function PaymentOptions() {
+  const location = useLocation();
   const navigate = useNavigate();
+  const billTotal = location.state?.total || 0; // Checkout से भेजा total amount
 
-  const handlePaymentSelect = (method) => {
-    // यहां पर आप Firebase में order का payment method update कर सकते हैं
-    console.log("Selected Payment Method:", method);
-    // आगे payment process पर navigate कर सकते हैं
-    navigate("/order-confirmation"); 
+  const handleSelect = (method) => {
+    console.log("Selected:", method);
+    // यहाँ payment handling या order update कर सकते हो
+    navigate("/order-confirmation");
   };
 
   return (
-    <div className="max-w-3xl mx-auto p-4">
-      {/* Title */}
-      <h1 className="text-2xl font-bold mb-6 text-gray-800">Choose Payment Method</h1>
+    <div className="max-w-md mx-auto bg-gray-50 min-h-screen">
+      {/* Header */}
+      <div className="bg-white p-4 border-b border-gray-200 flex justify-between items-center">
+        <button onClick={() => navigate(-1)} className="text-gray-600 text-lg">←</button>
+        <h2 className="text-lg font-semibold">Bill total: ₹{billTotal.toFixed(2)}</h2>
+      </div>
 
-      {/* Payment Options */}
-      <div className="space-y-4">
+      {/* Recommended */}
+      <div className="p-4">
+        <h3 className="text-xs text-gray-500 mb-2">RECOMMENDED</h3>
         <div
-          onClick={() => handlePaymentSelect("COD")}
-          className="border border-gray-300 rounded-lg p-4 flex justify-between items-center cursor-pointer hover:shadow-lg transition"
+          onClick={() => handleSelect("Shriram One UPI")}
+          className="bg-white border border-gray-200 p-3 rounded-lg flex items-center justify-between mb-2 cursor-pointer hover:bg-gray-100"
         >
-          <span className="text-lg font-medium text-gray-700">Cash on Delivery (COD)</span>
-          <span className="text-sm text-green-600 font-semibold">Pay on Delivery</span>
+          <span className="font-medium">Shriram One UPI</span>
         </div>
-
         <div
-          onClick={() => handlePaymentSelect("UPI")}
-          className="border border-gray-300 rounded-lg p-4 flex justify-between items-center cursor-pointer hover:shadow-lg transition"
+          onClick={() => handleSelect("Google Pay")}
+          className="bg-white border border-gray-200 p-3 rounded-lg flex items-center justify-between mb-2 cursor-pointer hover:bg-gray-100"
         >
-          <span className="text-lg font-medium text-gray-700">UPI</span>
-          <span className="text-sm text-blue-600 font-semibold">Google Pay / PhonePe / Paytm</span>
+          <span className="font-medium">Google Pay UPI</span>
         </div>
-
         <div
-          onClick={() => handlePaymentSelect("CARD")}
-          className="border border-gray-300 rounded-lg p-4 flex justify-between items-center cursor-pointer hover:shadow-lg transition"
+          onClick={() => handleSelect("PhonePe")}
+          className="bg-white border border-gray-200 p-3 rounded-lg flex items-center justify-between cursor-pointer hover:bg-gray-100"
         >
-          <span className="text-lg font-medium text-gray-700">Credit / Debit Card</span>
-          <span className="text-sm text-purple-600 font-semibold">Visa / MasterCard / RuPay</span>
+          <span className="font-medium">PhonePe UPI</span>
         </div>
       </div>
 
-      {/* Back Button */}
-      <div className="mt-6">
-        <button
-          onClick={() => navigate("/checkout")}
-          className="px-4 py-2 border border-gray-400 rounded-lg text-gray-700 hover:bg-gray-100 transition"
+      {/* Cards */}
+      <div className="p-4">
+        <h3 className="text-xs text-gray-500 mb-2">CARDS</h3>
+        <div
+          onClick={() => handleSelect("Credit/Debit Card")}
+          className="bg-white border border-gray-200 p-3 rounded-lg mb-2 cursor-pointer hover:bg-gray-100"
         >
-          Back to Checkout
-        </button>
+          <span className="font-medium">Add credit or debit card</span>
+        </div>
+      </div>
+
+      {/* Pay by UPI App */}
+      <div className="p-4">
+        <h3 className="text-xs text-gray-500 mb-2">PAY BY ANY UPI APP</h3>
+        <div
+          onClick={() => handleSelect("New UPI ID")}
+          className="bg-white border border-gray-200 p-3 rounded-lg cursor-pointer hover:bg-gray-100"
+        >
+          <span className="font-medium">Add new UPI ID</span>
+        </div>
+      </div>
+
+      {/* Wallets */}
+      <div className="p-4">
+        <h3 className="text-xs text-gray-500 mb-2">WALLETS</h3>
+        <div
+          onClick={() => handleSelect("Amazon Pay")}
+          className="bg-white border border-gray-200 p-3 rounded-lg cursor-pointer hover:bg-gray-100"
+        >
+          <span className="font-medium">Amazon Pay Balance</span>
+        </div>
+      </div>
+
+      {/* COD */}
+      <div className="p-4">
+        <h3 className="text-xs text-gray-500 mb-2">OTHER</h3>
+        <div
+          onClick={() => handleSelect("Cash on Delivery")}
+          className="bg-white border border-gray-200 p-3 rounded-lg cursor-pointer hover:bg-gray-100"
+        >
+          <span className="font-medium">Cash on Delivery (COD)</span>
+        </div>
       </div>
     </div>
   );
