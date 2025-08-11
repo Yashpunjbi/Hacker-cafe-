@@ -1,4 +1,4 @@
-// OrderSuccess.jsx
+// src/components/OrderSuccess.jsx
 import React from "react";
 import { useLocation, Link } from "react-router-dom";
 
