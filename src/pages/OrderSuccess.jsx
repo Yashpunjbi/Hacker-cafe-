@@ -1,34 +1,59 @@
-// src/components/OrderSuccess.jsx
-import React from "react";
-import { Link } from "react-router-dom";
+// src/components/OrderHistory.jsx
+import React, { useEffect, useState } from "react";
+import { db } from "../firebase";
+import { collection, query, where, orderBy, getDocs } from "firebase/firestore";
 
-export default function OrderSuccess() {
+export default function OrderHistory() {
+  const [orders, setOrders] = useState([]);
+  const userId = localStorage.getItem("userId") || "guest";
+
+  useEffect(() => {
+    const fetchOrders = async () => {
+      try {
+        const q = query(
+          collection(db, "orders"),
+          where("userId", "==", userId),
+          orderBy("createdAt", "desc")
+        );
+        const querySnapshot = await getDocs(q);
+        const ordersData = [];
+        querySnapshot.forEach((doc) => {
+          ordersData.push({ id: doc.id, ...doc.data() });
+        });
+        setOrders(ordersData);
+      } catch (error) {
+        console.error("Error fetching orders:", error);
+      }
+    };
+    fetchOrders();
+  }, [userId]);
+
   return (
-    <div className="min-h-screen bg-green-500 flex flex-col justify-center items-center text-white p-6">
-      {/* Big Tick Icon */}
-      <div className="bg-white rounded-full p-6 mb-4">
-        <svg
-          xmlns="http://www.w3.org/2000/svg"
-          className="h-16 w-16 text-green-500"
-          fill="none"
-          viewBox="0 0 24 24"
-          stroke="currentColor"
-          strokeWidth="3"
-        >
-          <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
-        </svg>
-      </div>
-
-      <h1 className="text-3xl font-bold">Order Successful!</h1>
-      <p className="mt-2 text-lg">Thank you for your purchase.</p>
-
-      {/* Back to Home */}
-      <Link
-        to="/"
-        className="mt-6 bg-white text-green-600 px-6 py-2 rounded-lg font-semibold hover:bg-gray-200"
-      >
-        Back to Home
-      </Link>
+    <div className="max-w-2xl mx-auto p-4">
+      <h2 className="text-2xl font-bold mb-4">Your Order History</h2>
+      {orders.length === 0 ? (
+        <p>No orders found.</p>
+      ) : (
+        <div className="space-y-4">
+          {orders.map((order) => (
+            <div key={order.id} className="p-4 border rounded bg-white shadow">
+              <p><strong>Order ID:</strong> {order.id}</p>
+              <p><strong>Payment:</strong> {order.method}</p>
+              <p><strong>Total:</strong> ₹{order.total}</p>
+              <p className="text-sm text-gray-500">
+                {order.createdAt?.toDate().toLocaleString()}
+              </p>
+              <ul className="mt-2 text-sm">
+                {order.items.map((item, index) => (
+                  <li key={index}>
+                    {item.name} × {item.quantity} — ₹{item.price}
+                  </li>
+                ))}
+              </ul>
+            </div>
+          ))}
+        </div>
+      )}
     </div>
   );
 }
