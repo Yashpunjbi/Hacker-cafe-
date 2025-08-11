@@ -1,36 +1,31 @@
 // src/components/OrderSuccess.jsx
 import React from "react";
-import { useLocation, Link } from "react-router-dom";
+import { Link } from "react-router-dom";
 
 export default function OrderSuccess() {
-  const location = useLocation();
-  const { amount, method, orderId } = location.state || {};
-
   return (
-    <div className="max-w-md mx-auto bg-white min-h-screen flex flex-col justify-center items-center p-6">
-      <img
-        src="https://cdn-icons-png.flaticon.com/512/845/845646.png"
-        alt="Success"
-        className="w-20 h-20 mb-4"
-      />
-      <h1 className="text-2xl font-bold text-green-600">Order Successful!</h1>
-      <p className="mt-2 text-gray-700">Thank you for your purchase.</p>
-
-      <div className="mt-4 p-4 bg-gray-100 rounded-lg w-full">
-        <p>
-          <strong>Order ID:</strong> {orderId}
-        </p>
-        <p>
-          <strong>Amount:</strong> ₹{amount?.toFixed(2)}
-        </p>
-        <p>
-          <strong>Payment Method:</strong> {method}
-        </p>
+    <div className="min-h-screen bg-green-500 flex flex-col justify-center items-center text-white p-6">
+      {/* Big Tick Icon */}
+      <div className="bg-white rounded-full p-6 mb-4">
+        <svg
+          xmlns="http://www.w3.org/2000/svg"
+          className="h-16 w-16 text-green-500"
+          fill="none"
+          viewBox="0 0 24 24"
+          stroke="currentColor"
+          strokeWidth="3"
+        >
+          <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
+        </svg>
       </div>
 
+      <h1 className="text-3xl font-bold">Order Successful!</h1>
+      <p className="mt-2 text-lg">Thank you for your purchase.</p>
+
+      {/* Back to Home */}
       <Link
         to="/"
-        className="mt-6 bg-blue-600 text-white px-6 py-2 rounded-lg hover:bg-blue-700"
+        className="mt-6 bg-white text-green-600 px-6 py-2 rounded-lg font-semibold hover:bg-gray-200"
       >
         Back to Home
       </Link>
