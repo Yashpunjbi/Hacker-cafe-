@@ -16,7 +16,7 @@ import Contact from "./pages/Contact";
 import Terms from "./pages/Terms";
 import CategoryMenu from "./pages/CategoryMenu";
 import PaymentOptions from "./pages/PaymentOptions";
-import OrderSuccess frome "./pages/OrderSuccess";
+import OrderSuccess from "./pages/OrderSuccess";
 
 import BottomNavbar from "./components/BottomNav";
 import Navbar from "./components/Navbar";
