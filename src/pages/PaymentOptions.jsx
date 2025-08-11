@@ -13,9 +13,33 @@ export default function PaymentOptions() {
   );
 
   const handlePlaceOrder = () => {
-    // Order save karne ka logic yaha daal sakte ho
+    const orderId = "ORD" + Date.now();
+
+    // Order data prepare
+    const orderData = {
+      orderId,
+      amount: totalAmount,
+      method: paymentMethod,
+      items: cartItems,
+      date: new Date().toLocaleString()
+    };
+
+    // Save to localStorage (Order History / Admin Panel)
+    const orders = JSON.parse(localStorage.getItem("orders")) || [];
+    orders.push(orderData);
+    localStorage.setItem("orders", JSON.stringify(orders));
+
+    // Clear cart
     localStorage.removeItem("cartItems");
-    navigate("/order-success");
+
+    // Navigate to success page with state
+    navigate("/order-success", {
+      state: {
+        orderId,
+        amount: totalAmount,
+        method: paymentMethod
+      }
+    });
   };
 
   return (
