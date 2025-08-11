@@ -1,15 +1,14 @@
-// src/pages/PaymentOptions.jsx
 import React from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 
 export default function PaymentOptions() {
   const location = useLocation();
   const navigate = useNavigate();
-  const billTotal = location.state?.total || 0; // Checkout से भेजा total amount
+  const billTotal = location.state?.total || 0;
 
   const handleSelect = (method) => {
-    console.log("Selected:", method);
-    // यहाँ payment handling या order update कर सकते हो
+    console.log("Selected Payment:", method);
+    // यहाँ पेमेंट प्रोसेस या ऑर्डर सेव कर सकते हैं
     navigate("/order-confirmation");
   };
 
@@ -17,74 +16,55 @@ export default function PaymentOptions() {
     <div className="max-w-md mx-auto bg-gray-50 min-h-screen">
       {/* Header */}
       <div className="bg-white p-4 border-b border-gray-200 flex justify-between items-center">
-        <button onClick={() => navigate(-1)} className="text-gray-600 text-lg">←</button>
-        <h2 className="text-lg font-semibold">Bill total: ₹{billTotal.toFixed(2)}</h2>
+        <button onClick={() => navigate(-1)} className="text-gray-600 text-lg">
+          ←
+        </button>
+        <h2 className="text-lg font-semibold">
+          Bill total: ₹{billTotal.toFixed(2)}
+        </h2>
       </div>
 
-      {/* Recommended */}
-      <div className="p-4">
-        <h3 className="text-xs text-gray-500 mb-2">RECOMMENDED</h3>
-        <div
-          onClick={() => handleSelect("Shriram One UPI")}
-          className="bg-white border border-gray-200 p-3 rounded-lg flex items-center justify-between mb-2 cursor-pointer hover:bg-gray-100"
-        >
-          <span className="font-medium">Shriram One UPI</span>
-        </div>
+      {/* Payment Options */}
+      <div className="p-4 space-y-3">
+        {/* Google Pay */}
         <div
           onClick={() => handleSelect("Google Pay")}
-          className="bg-white border border-gray-200 p-3 rounded-lg flex items-center justify-between mb-2 cursor-pointer hover:bg-gray-100"
+          className="bg-white border border-gray-200 p-3 rounded-lg flex items-center gap-3 cursor-pointer hover:bg-gray-100"
         >
-          <span className="font-medium">Google Pay UPI</span>
+          <img
+            src="https://upload.wikimedia.org/wikipedia/commons/5/5a/Google_Pay_Logo.svg"
+            alt="Google Pay"
+            className="w-8 h-8"
+          />
+          <span className="text-gray-800 font-medium">Google Pay UPI</span>
         </div>
+
+        {/* PhonePe */}
         <div
           onClick={() => handleSelect("PhonePe")}
-          className="bg-white border border-gray-200 p-3 rounded-lg flex items-center justify-between cursor-pointer hover:bg-gray-100"
+          className="bg-white border border-gray-200 p-3 rounded-lg flex items-center gap-3 cursor-pointer hover:bg-gray-100"
         >
-          <span className="font-medium">PhonePe UPI</span>
+          <img
+            src="https://upload.wikimedia.org/wikipedia/commons/f/f0/PhonePe_Logo.svg"
+            alt="PhonePe"
+            className="w-8 h-8"
+          />
+          <span className="text-gray-800 font-medium">PhonePe UPI</span>
         </div>
-      </div>
 
-      {/* Cards */}
-      <div className="p-4">
-        <h3 className="text-xs text-gray-500 mb-2">CARDS</h3>
-        <div
-          onClick={() => handleSelect("Credit/Debit Card")}
-          className="bg-white border border-gray-200 p-3 rounded-lg mb-2 cursor-pointer hover:bg-gray-100"
-        >
-          <span className="font-medium">Add credit or debit card</span>
-        </div>
-      </div>
-
-      {/* Pay by UPI App */}
-      <div className="p-4">
-        <h3 className="text-xs text-gray-500 mb-2">PAY BY ANY UPI APP</h3>
-        <div
-          onClick={() => handleSelect("New UPI ID")}
-          className="bg-white border border-gray-200 p-3 rounded-lg cursor-pointer hover:bg-gray-100"
-        >
-          <span className="font-medium">Add new UPI ID</span>
-        </div>
-      </div>
-
-      {/* Wallets */}
-      <div className="p-4">
-        <h3 className="text-xs text-gray-500 mb-2">WALLETS</h3>
-        <div
-          onClick={() => handleSelect("Amazon Pay")}
-          className="bg-white border border-gray-200 p-3 rounded-lg cursor-pointer hover:bg-gray-100"
-        >
-          <span className="font-medium">Amazon Pay Balance</span>
-        </div>
-      </div>
-
-      {/* COD */}
-      <div className="p-4">
-        <h3 className="text-xs text-gray-500 mb-2">OTHER</h3>
+        {/* Cash on Delivery */}
         <div
           onClick={() => handleSelect("Cash on Delivery")}
-          className="bg-white border border-gray-200 p-3 rounded-lg cursor-pointer hover:bg-gray-100"
+          className="bg-white border border-gray-200 p-3 rounded-lg flex items-center gap-3 cursor-pointer hover:bg-gray-100"
         >
-          <span className="font-medium">Cash on Delivery (COD)</span>
+          <img
+            src="https://cdn-icons-png.flaticon.com/512/2331/2331966.png"
+            alt="Cash on Delivery"
+            className="w-8 h-8"
+          />
+          <span className="text-gray-800 font-medium">
+            Cash on Delivery (COD)
+          </span>
         </div>
       </div>
     </div>
