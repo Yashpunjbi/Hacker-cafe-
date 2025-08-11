@@ -1,3 +1,4 @@
+// PaymentOptions.jsx
 import React from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 
@@ -6,29 +7,45 @@ export default function PaymentOptions() {
   const navigate = useNavigate();
   const billTotal = location.state?.total || 0;
 
-  const handleSelect = (method) => {
-    console.log("Selected Payment:", method);
-    // यहाँ पेमेंट प्रोसेस या ऑर्डर सेव कर सकते हैं
-    navigate("/order-confirmation");
+  // Success redirect function
+  const goToSuccess = (paymentMethod) => {
+    navigate("/order-success", {
+      state: {
+        amount: billTotal,
+        method: paymentMethod,
+        orderId: "ORD" + Math.floor(Math.random() * 1000000),
+      },
+    });
+  };
+
+  // UPI payment handler
+  const handleUPIPayment = (method) => {
+    const upiURL = `upi://pay?pa=merchant@upi&pn=Merchant%20Name&mc=0000&tid=${Date.now()}&tr=TXN${Math.floor(
+      Math.random() * 100000
+    )}&tn=Order%20Payment&am=${billTotal}&cu=INR&url=https://yourapp.com`;
+
+    // Open UPI App
+    window.location.href = upiURL;
+
+    // Simulate success after few seconds (real app में callback handle होगा)
+    setTimeout(() => {
+      goToSuccess(method);
+    }, 4000);
   };
 
   return (
     <div className="max-w-md mx-auto bg-gray-50 min-h-screen">
       {/* Header */}
       <div className="bg-white p-4 border-b border-gray-200 flex justify-between items-center">
-        <button onClick={() => navigate(-1)} className="text-gray-600 text-lg">
-          ←
-        </button>
         <h2 className="text-lg font-semibold">
           Bill total: ₹{billTotal.toFixed(2)}
         </h2>
       </div>
 
-      {/* Payment Options */}
       <div className="p-4 space-y-3">
         {/* Google Pay */}
         <div
-          onClick={() => handleSelect("Google Pay")}
+          onClick={() => handleUPIPayment("Google Pay")}
           className="bg-white border border-gray-200 p-3 rounded-lg flex items-center gap-3 cursor-pointer hover:bg-gray-100"
         >
           <img
@@ -41,7 +58,7 @@ export default function PaymentOptions() {
 
         {/* PhonePe */}
         <div
-          onClick={() => handleSelect("PhonePe")}
+          onClick={() => handleUPIPayment("PhonePe")}
           className="bg-white border border-gray-200 p-3 rounded-lg flex items-center gap-3 cursor-pointer hover:bg-gray-100"
         >
           <img
@@ -54,7 +71,7 @@ export default function PaymentOptions() {
 
         {/* Cash on Delivery */}
         <div
-          onClick={() => handleSelect("Cash on Delivery")}
+          onClick={() => goToSuccess("Cash on Delivery")}
           className="bg-white border border-gray-200 p-3 rounded-lg flex items-center gap-3 cursor-pointer hover:bg-gray-100"
         >
           <img
