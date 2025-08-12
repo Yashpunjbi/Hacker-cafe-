@@ -1,8 +1,5 @@
-import React, { useState, useEffect } from "react";
+import React, { useState } from "react";
 import { useCart } from "../context/CartContext";
-import { db, auth } from "../firebase";
-import { collection, getDocs, query, where } from "firebase/firestore";
-import { onAuthStateChanged } from "firebase/auth";
 import { useNavigate } from "react-router-dom";
 
 const Checkout = () => {
@@ -21,16 +18,7 @@ const Checkout = () => {
   const itemsTotal = cart.reduce((acc, item) => acc + item.price * item.qty, 0);
   const totalAmount = itemsTotal + deliveryCharge - discount;
 
-  useEffect(() => {
-    const unsubscribe = onAuthStateChanged(auth, (user) => {
-      if (user) {
-        setEmail(user.email);
-      }
-    });
-    return () => unsubscribe();
-  }, []);
-
-  const handleApplyPromo = async () => {
+  const handleApplyPromo = () => {
     if (promoApplied) {
       alert("Promo code already applied!");
       return;
@@ -43,40 +31,12 @@ const Checkout = () => {
       setDiscount(30);
       setPromoApplied(true);
       alert("Promo applied: ₹30 off");
-      setCheckingPromo(false);
-      return;
-    }
-
-    if (code === "save50") {
+    } else if (code === "save50") {
       setDiscount(50);
       setPromoApplied(true);
       alert("Promo applied: ₹50 off");
-      setCheckingPromo(false);
-      return;
-    }
-
-    try {
-      const promoRef = collection(db, "promoCodes");
-      const q = query(promoRef, where("code", "==", code));
-      const snapshot = await getDocs(q);
-
-      if (snapshot.empty) {
-        alert("Invalid promo code!");
-      } else {
-        const promoData = snapshot.docs[0].data();
-        const promoDiscount = parseInt(promoData.discount) || 0;
-
-        if (promoDiscount > 0) {
-          setDiscount(promoDiscount);
-          setPromoApplied(true);
-          alert(`Promo applied: ₹${promoDiscount} off`);
-        } else {
-          alert("Invalid discount value in promo code.");
-        }
-      }
-    } catch (error) {
-      console.error("Error checking promo code:", error);
-      alert("Something went wrong!");
+    } else {
+      alert("Invalid promo code!");
     }
 
     setCheckingPromo(false);
@@ -162,9 +122,10 @@ const Checkout = () => {
         />
         <input
           type="email"
+          placeholder="Email Address"
+          className="w-full p-2 border rounded"
           value={email}
-          readOnly
-          className="w-full p-2 border rounded bg-gray-100 cursor-not-allowed"
+          onChange={(e) => setEmail(e.target.value)}
         />
 
         {/* 🎟️ PROMO CODE */}
