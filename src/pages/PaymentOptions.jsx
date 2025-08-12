@@ -1,6 +1,8 @@
 // src/components/PaymentOptions.jsx
 import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
+import { db } from "../firebase";
+import { collection, addDoc, serverTimestamp } from "firebase/firestore";
 
 export default function PaymentOptions() {
   const navigate = useNavigate();
@@ -12,34 +14,44 @@ export default function PaymentOptions() {
     0
   );
 
-  const handlePlaceOrder = () => {
+  const handlePlaceOrder = async () => {
     const orderId = "ORD" + Date.now();
+    const userId = localStorage.getItem("userId") || "guest";
 
     // Order data prepare
     const orderData = {
+      userId,
       orderId,
       amount: totalAmount,
       method: paymentMethod,
       items: cartItems,
-      date: new Date().toLocaleString()
+      createdAt: serverTimestamp()
     };
 
-    // Save to localStorage (Order History / Admin Panel)
-    const orders = JSON.parse(localStorage.getItem("orders")) || [];
-    orders.push(orderData);
-    localStorage.setItem("orders", JSON.stringify(orders));
+    try {
+      // Save to Firebase
+      await addDoc(collection(db, "orders"), orderData);
 
-    // Clear cart
-    localStorage.removeItem("cartItems");
+      // Save to localStorage (for quick access)
+      const orders = JSON.parse(localStorage.getItem("orders")) || [];
+      orders.push(orderData);
+      localStorage.setItem("orders", JSON.stringify(orders));
 
-    // Navigate to success page with state
-    navigate("/order-success", {
-      state: {
-        orderId,
-        amount: totalAmount,
-        method: paymentMethod
-      }
-    });
+      // Clear cart
+      localStorage.removeItem("cartItems");
+
+      // Navigate to success page with state
+      navigate("/order-success", {
+        state: {
+          orderId,
+          amount: totalAmount,
+          method: paymentMethod,
+          items: cartItems
+        }
+      });
+    } catch (error) {
+      console.error("Error saving order:", error);
+    }
   };
 
   return (
