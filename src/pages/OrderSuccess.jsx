@@ -1,57 +1,66 @@
-// src/components/OrderSuccess.jsx
+// OrderSuccess.jsx
 import React, { useEffect } from "react";
-import { useLocation, useNavigate } from "react-router-dom";
+import { useLocation, Link } from "react-router-dom";
 import { db } from "../firebase";
 import { collection, addDoc, serverTimestamp } from "firebase/firestore";
 
 export default function OrderSuccess() {
   const location = useLocation();
-  const navigate = useNavigate();
-
   const { amount, method, orderId, items } = location.state || {};
-  const userId = localStorage.getItem("userId") || "guest";
 
   useEffect(() => {
     const saveOrder = async () => {
-      try {
-        await addDoc(collection(db, "orders"), {
-          userId,               // Customer identify करने के लिए
-          items: items || [],   // Cart products
-          total: amount || 0,   // Total amount
-          method: method || "COD",
-          orderId: orderId || `ORD-${Date.now()}`,
-          createdAt: serverTimestamp()
-        });
+      if (!orderId || !amount || !method || !items) return; // data missing तो save नहीं करेगा
 
-        console.log("Order saved in Firebase ✅");
+      const userId = localStorage.getItem("userId") || "guest";
+
+      const orderData = {
+        userId,
+        orderId,
+        items,
+        total: amount,
+        method,
+        createdAt: serverTimestamp()
+      };
+
+      try {
+        await addDoc(collection(db, "orders"), orderData);
       } catch (error) {
-        console.error("Error saving order:", error);
+        console.error("Error saving order in success page:", error);
       }
     };
 
     saveOrder();
-
-    // 3 सेकंड बाद Order History पर redirect
-    const timer = setTimeout(() => {
-      navigate("/order-history");
-    }, 3000);
-
-    return () => clearTimeout(timer);
-  }, [amount, method, orderId, items, userId, navigate]);
+  }, [amount, method, orderId, items]);
 
   return (
-    <div className="min-h-screen flex flex-col justify-center items-center bg-green-500 text-white">
-      <svg
-        className="w-24 h-24 mb-4"
-        fill="none"
-        stroke="currentColor"
-        strokeWidth={2}
-        viewBox="0 0 24 24"
+    <div className="max-w-md mx-auto bg-white min-h-screen flex flex-col justify-center items-center p-6">
+      <img
+        src="https://cdn-icons-png.flaticon.com/512/845/845646.png"
+        alt="Success"
+        className="w-20 h-20 mb-4"
+      />
+      <h1 className="text-2xl font-bold text-green-600">Order Successful!</h1>
+      <p className="mt-2 text-gray-700">Thank you for your purchase.</p>
+
+      <div className="mt-4 p-4 bg-gray-100 rounded-lg w-full">
+        <p>
+          <strong>Order ID:</strong> {orderId}
+        </p>
+        <p>
+          <strong>Amount:</strong> ₹{amount?.toFixed(2)}
+        </p>
+        <p>
+          <strong>Payment Method:</strong> {method}
+        </p>
+      </div>
+
+      <Link
+        to="/"
+        className="mt-6 bg-blue-600 text-white px-6 py-2 rounded-lg hover:bg-blue-700"
       >
-        <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
-      </svg>
-      <h1 className="text-3xl font-bold">Order Successful!</h1>
-      <p className="mt-2 text-lg">Redirecting to your order history...</p>
+        Back to Home
+      </Link>
     </div>
   );
 }
