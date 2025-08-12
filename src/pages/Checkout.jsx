@@ -67,9 +67,11 @@ const Checkout = () => {
 
   return (
     <div className="max-w-2xl mx-auto p-6 bg-white rounded shadow mt-6">
-      <h2 className="text-2xl font-bold text-center text-pink-600 mb-4">Checkout</h2>
+      <h2 className="text-2xl font-bold text-center text-pink-600 mb-4">
+        Checkout
+      </h2>
 
-      {/* 🛒 CART ITEMS */}
+      {/* CART ITEMS */}
       <div className="mb-4">
         <h3 className="text-lg font-semibold mb-2 text-gray-700">Your Cart</h3>
         {cart.length === 0 ? (
@@ -98,7 +100,7 @@ const Checkout = () => {
         )}
       </div>
 
-      {/* 🧾 ORDER FORM */}
+      {/* ORDER FORM */}
       <form onSubmit={handleContinuePayment} className="space-y-4">
         <input
           type="text"
@@ -128,7 +130,7 @@ const Checkout = () => {
           onChange={(e) => setEmail(e.target.value)}
         />
 
-        {/* 🎟️ PROMO CODE */}
+        {/* PROMO CODE */}
         <div className="flex gap-2 items-center">
           <input
             type="text"
@@ -152,7 +154,7 @@ const Checkout = () => {
           </button>
         </div>
 
-        {/* 💰 TOTAL */}
+        {/* TOTAL */}
         <div className="text-sm text-gray-600 mt-4">
           <div className="flex justify-between mb-1">
             <span>Items Total:</span>
@@ -174,7 +176,6 @@ const Checkout = () => {
           </div>
         </div>
 
-        {/* Continue Button */}
         <button
           type="submit"
           className="w-full bg-pink-600 text-white p-2 rounded mt-4"
