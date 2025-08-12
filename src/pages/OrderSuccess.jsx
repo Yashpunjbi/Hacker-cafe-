@@ -1,37 +1,18 @@
-// OrderSuccess.jsx
-import React, { useEffect } from "react";
+import React from "react";
 import { useLocation, Link } from "react-router-dom";
-import { db } from "../firebase";
-import { collection, addDoc, serverTimestamp } from "firebase/firestore";
 
 export default function OrderSuccess() {
   const location = useLocation();
-  const { amount, method, orderId, items } = location.state || {};
-
-  useEffect(() => {
-    const saveOrder = async () => {
-      if (!orderId || !amount || !method || !items) return; // data missing तो save नहीं करेगा
-
-      const userId = localStorage.getItem("userId") || "guest";
-
-      const orderData = {
-        userId,
-        orderId,
-        items,
-        total: amount,
-        method,
-        createdAt: serverTimestamp()
-      };
-
-      try {
-        await addDoc(collection(db, "orders"), orderData);
-      } catch (error) {
-        console.error("Error saving order in success page:", error);
-      }
-    };
-
-    saveOrder();
-  }, [amount, method, orderId, items]);
+  const {
+    orderId,
+    amount,
+    method,
+    name,
+    address,
+    phone,
+    email,
+    items,
+  } = location.state || {};
 
   return (
     <div className="max-w-md mx-auto bg-white min-h-screen flex flex-col justify-center items-center p-6">
@@ -44,15 +25,13 @@ export default function OrderSuccess() {
       <p className="mt-2 text-gray-700">Thank you for your purchase.</p>
 
       <div className="mt-4 p-4 bg-gray-100 rounded-lg w-full">
-        <p>
-          <strong>Order ID:</strong> {orderId}
-        </p>
-        <p>
-          <strong>Amount:</strong> ₹{amount?.toFixed(2)}
-        </p>
-        <p>
-          <strong>Payment Method:</strong> {method}
-        </p>
+        <p><strong>Order ID:</strong> {orderId}</p>
+        <p><strong>Name:</strong> {name}</p>
+        <p><strong>Address:</strong> {address}</p>
+        <p><strong>Phone:</strong> {phone}</p>
+        <p><strong>Email:</strong> {email}</p>
+        <p><strong>Amount:</strong> ₹{amount}</p>
+        <p><strong>Payment Method:</strong> {method}</p>
       </div>
 
       <Link
