@@ -21,12 +21,10 @@ export default function PaymentOptions() {
   } = location.state || {};
 
   const handlePlaceOrder = async () => {
-    const orderId = "ORD" + Date.now();
     const userId = localStorage.getItem("userId") || "guest";
 
     const orderData = {
       userId,
-      orderId,
       name: name || "Guest",
       email: email || "Not provided",
       phone: phone || "Not provided",
@@ -41,12 +39,18 @@ export default function PaymentOptions() {
     };
 
     try {
-      await addDoc(collection(db, "orders"), orderData);
+      // Save to Firebase & get document reference
+      const docRef = await addDoc(collection(db, "orders"), orderData);
 
+      // Add the Firebase-generated orderId to data
+      const finalOrderData = { ...orderData, orderId: docRef.id };
+
+      // Clear cart
       localStorage.removeItem("cartItems");
 
+      // Navigate to success page with correct ID
       navigate("/order-success", {
-        state: orderData,
+        state: finalOrderData,
       });
     } catch (error) {
       console.error("Error saving order:", error);
