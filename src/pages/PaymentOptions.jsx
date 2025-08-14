@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
-import { db } from "../firebase";
+import { db, auth } from "../firebase";
 import { collection, addDoc, serverTimestamp } from "firebase/firestore";
 
 export default function PaymentOptions() {
@@ -21,15 +21,16 @@ export default function PaymentOptions() {
   } = location.state || {};
 
   const handlePlaceOrder = async () => {
-    const userId = localStorage.getItem("userId") || "guest";
+    const user = auth.currentUser;
+    const userId = user?.uid || localStorage.getItem("userId") || "guest";
 
     const orderData = {
       userId,
-      name: name || "Guest",
-      email: email || "Not provided",
+      name: name || user?.displayName || "Guest",
+      email: user?.email || email || "Not provided",
       phone: phone || "Not provided",
       address: address || "Not provided",
-      items: cart,
+      items: cart || [],
       itemsTotal,
       deliveryCharge,
       discount,
@@ -39,19 +40,16 @@ export default function PaymentOptions() {
     };
 
     try {
-      // Save to Firebase & get document reference
+      // Save to Firebase
       const docRef = await addDoc(collection(db, "orders"), orderData);
 
-      // Add the Firebase-generated orderId to data
-      const finalOrderData = { ...orderData, orderId: docRef.id };
+      // Navigate to success page
+      navigate("/order-success", {
+        state: { ...orderData, orderId: docRef.id },
+      });
 
       // Clear cart
       localStorage.removeItem("cartItems");
-
-      // Navigate to success page with correct ID
-      navigate("/order-success", {
-        state: finalOrderData,
-      });
     } catch (error) {
       console.error("Error saving order:", error);
     }
