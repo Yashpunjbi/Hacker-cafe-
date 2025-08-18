@@ -1,80 +1,95 @@
-import React, { useEffect, useState } from 'react';
-import { db, auth } from '../firebase';
-import { collection, query, where, getDocs, orderBy } from 'firebase/firestore';
-import { onAuthStateChanged } from 'firebase/auth';
+import React, { useEffect, useState } from "react";
+import { db, auth } from "../firebase";
+import { collection, query, where, orderBy, onSnapshot } from "firebase/firestore";
+import { onAuthStateChanged } from "firebase/auth";
+import { useNavigate } from "react-router-dom";
 
 const OrderHistory = () => {
   const [orders, setOrders] = useState([]);
   const [loading, setLoading] = useState(true);
+  const navigate = useNavigate();
 
   useEffect(() => {
-    const unsubscribe = onAuthStateChanged(auth, async (user) => {
+    const unsubscribeAuth = onAuthStateChanged(auth, (user) => {
       if (user) {
-        try {
-          const q = query(
-            collection(db, 'orders'),
-            where('email', '==', user.email),
-            orderBy('createdAt', 'desc')
-          );
-          const querySnapshot = await getDocs(q);
+        const q = query(
+          collection(db, "orders"),
+          where("email", "==", user.email),
+          orderBy("createdAt", "desc")
+        );
 
-          const fetchedOrders = [];
-          querySnapshot.forEach((doc) => {
-            fetchedOrders.push({ id: doc.id, ...doc.data() });
-          });
-
+        const unsubscribeSnap = onSnapshot(q, (snapshot) => {
+          const fetchedOrders = snapshot.docs.map((doc) => ({
+            id: doc.id,
+            ...doc.data(),
+          }));
           setOrders(fetchedOrders);
-        } catch (error) {
-          console.error("Error fetching orders:", error);
-        }
+          setLoading(false);
+        });
+
+        return () => unsubscribeSnap();
       } else {
         setOrders([]);
+        setLoading(false);
       }
-      setLoading(false);
     });
 
-    return () => unsubscribe();
+    return () => unsubscribeAuth();
   }, []);
 
-  return (
-    <div className="max-w-4xl mx-auto p-6">
-      <h2 className="text-3xl font-bold mb-6 text-center">Your Order History</h2>
+  if (loading) return <p className="text-center">Loading orders...</p>;
 
-      {loading ? (
-        <p className="text-center">Loading orders...</p>
-      ) : orders.length === 0 ? (
-        <p className="text-center text-gray-600">No orders found.</p>
+  return (
+    <div className="max-w-3xl mx-auto p-4">
+      <h2 className="text-2xl font-bold mb-6 text-center">My Orders</h2>
+
+      {orders.length === 0 ? (
+        <p className="text-center text-gray-500">No orders yet.</p>
       ) : (
-        <div className="space-y-6">
-          {orders.map((order) => (
-            <div key={order.id} className="border rounded p-4 shadow">
-              <p><strong>Order ID:</strong> {order.orderId || order.id}</p>
-              <p>
-                <strong>Date:</strong>{" "}
+        <div className="space-y-4">
+          {orders.map((order, index) => (
+            <div
+              key={order.id}
+              className="border rounded-lg shadow p-4 flex flex-col gap-3"
+            >
+              {/* Header */}
+              <div className="flex justify-between items-center">
+                <p className="font-semibold">
+                  {order.method === "COD" ? "Cash on Delivery" : "Takeaway"}
+                </p>
+                <span className="bg-yellow-200 text-yellow-800 px-2 py-1 rounded text-xs font-semibold">
+                  {order.status || "ORDER CONFIRMED"}
+                </span>
+              </div>
+
+              {/* Order Info */}
+              <p className="text-sm text-gray-600">
+                Order #{index + 1} &nbsp; | &nbsp;
                 {order.createdAt?.seconds
                   ? new Date(order.createdAt.seconds * 1000).toLocaleString()
                   : "N/A"}
               </p>
-              <p><strong>Status:</strong> <span className="font-semibold">{order.status || "Placed"}</span></p>
 
-              <div className="mt-4 space-y-3">
-                {order.items?.map((item, idx) => (
-                  <div key={idx} className="flex items-center gap-4 border p-2 rounded-md">
-                    <img
-                      src={item.image || "https://via.placeholder.com/60"}
-                      alt={item.name}
-                      className="w-16 h-16 object-cover rounded"
-                    />
-                    <div>
-                      <p className="font-semibold">{item.name}</p>
-                      <p className="text-sm text-gray-600">Qty: {item.qty} | ₹{item.price}</p>
-                    </div>
-                  </div>
-                ))}
+              {/* Item Preview */}
+              <div className="border rounded-md p-3 flex justify-between items-center">
+                <div>
+                  <p className="font-semibold">{order.items?.[0]?.name}</p>
+                  <p className="text-sm text-gray-600">
+                    Qty: {order.items?.[0]?.qty}
+                  </p>
+                </div>
+                <p className="font-bold">₹{order.amount}</p>
               </div>
 
-              <p className="mt-4"><strong>Total:</strong> ₹{order.amount || 'N/A'}</p>
-              <p><strong>Address:</strong> {order.address}</p>
+              {/* Track Button */}
+              <button
+                onClick={() =>
+                  navigate("/track-order", { state: { order } })
+                }
+                className="bg-red-500 text-white py-2 rounded-md font-semibold"
+              >
+                Track
+              </button>
             </div>
           ))}
         </div>
