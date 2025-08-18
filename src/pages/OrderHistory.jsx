@@ -1,105 +1,100 @@
 import React, { useEffect, useState } from "react";
-import { useNavigate } from "react-router-dom";
 import { db, auth } from "../firebase";
-import {
-  collection,
-  query,
-  where,
-  getDocs,
-  orderBy,
-} from "firebase/firestore";
+import { collection, query, where, getDocs } from "firebase/firestore";
+import { useNavigate } from "react-router-dom";
+import { Copy } from "lucide-react"; // icon ke liye (install: npm i lucide-react)
 
 const OrderHistory = () => {
-  const [orders, setOrders] = useState([]);
-  const [loading, setLoading] = useState(true);
-  const navigate = useNavigate();
+const [orders, setOrders] = useState([]);
+const [loading, setLoading] = useState(true);
+const navigate = useNavigate();
 
-  useEffect(() => {
-    const fetchOrders = async () => {
-      try {
-        const user = auth.currentUser;
-        if (!user) {
-          setOrders([]);
-          setLoading(false);
-          return;
-        }
+useEffect(() => {
+const fetchOrders = async () => {
+try {
+const user = auth.currentUser;
+if (!user) {
+setLoading(false);
+return;
+}
 
-        const ordersRef = collection(db, "orders");
-        const q = query(
-          ordersRef,
-          where("userId", "==", user.uid),
-          orderBy("createdAt", "desc")
-        );
+const q = query(  
+      collection(db, "orders"),  
+      where("userId", "==", user.uid)  
+    );  
 
-        const querySnapshot = await getDocs(q);
+    const querySnapshot = await getDocs(q);  
+    const ordersList = querySnapshot.docs.map((doc) => ({  
+      id: doc.id,  
+      ...doc.data(),  
+    }));  
 
-        const fetchedOrders = [];
-        querySnapshot.forEach((doc) => {
-          fetchedOrders.push({ id: doc.id, ...doc.data() });
-        });
+    setOrders(ordersList);  
+  } catch (error) {  
+    console.error("Error fetching orders: ", error);  
+  } finally {  
+    setLoading(false);  
+  }  
+};  
 
-        setOrders(fetchedOrders);
-        setLoading(false);
-      } catch (error) {
-        console.error("Error fetching orders:", error);
-        setLoading(false);
-      }
-    };
+fetchOrders();
 
-    fetchOrders();
-  }, []);
+}, []);
 
-  if (loading) {
-    return <p className="text-center mt-6">Loading your orders...</p>;
-  }
+const handleCopy = (id) => {
+navigator.clipboard.writeText(id);
+alert("Order ID copied!");
+};
 
-  if (orders.length === 0) {
-    return <p className="text-center mt-6">No orders found.</p>;
-  }
+if (loading) return <p className="text-center mt-10">Loading your orders...</p>;
 
-  return (
-    <div className="max-w-3xl mx-auto p-4">
-      <h2 className="text-xl font-bold mb-4 text-center">Your Orders</h2>
-      <div className="space-y-4">
-        {orders.map((order) => (
-          <div
-            key={order.id}
-            className="border p-4 rounded-lg shadow-md bg-white flex flex-col sm:flex-row sm:items-center sm:justify-between"
-          >
-            <div>
-              <p className="font-semibold">Order ID: {order.id}</p>
-              <p className="text-gray-600">
-                {order.items?.map((item, idx) => (
-                  <span key={idx}>
-                    {item.name} x {item.quantity}
-                    {idx < order.items.length - 1 && ", "}
-                  </span>
-                ))}
-              </p>
-              <p className="font-bold mt-1">₹{order.totalAmount}</p>
-            </div>
-            <div className="flex gap-2 mt-2 sm:mt-0">
-              <button
-                onClick={() => {
-                  navigator.clipboard.writeText(order.id);
-                  alert("Order ID copied!");
-                }}
-                className="bg-gray-200 px-3 py-1 rounded hover:bg-gray-300"
-              >
-                Copy ID
-              </button>
-              <button
-                onClick={() => navigate(`/track/${order.id}`)}
-                className="bg-blue-600 text-white px-4 py-1 rounded hover:bg-blue-700"
-              >
-                Track
-              </button>
-            </div>
-          </div>
-        ))}
-      </div>
-    </div>
-  );
+if (orders.length === 0) {
+return <p className="text-center mt-10">No past orders found.</p>;
+}
+
+return (
+<div className="max-w-3xl mx-auto p-4">
+<h2 className="text-2xl font-bold mb-4">Your Orders</h2>
+<div className="space-y-4">
+{orders.map((order) => (
+<div  
+key={order.id}  
+className="p-4 border rounded-xl shadow-md bg-white flex justify-between items-center"  
+>
+<div>
+<p className="font-semibold text-lg">
+{order.items?.[0]?.name || "Order"}
+</p>
+
+{/* Order ID with Copy */}  
+          <div className="flex items-center space-x-2">  
+            <p className="text-sm text-gray-600">Order ID: {order.id}</p>  
+            <button  
+              onClick={() => handleCopy(order.id)}  
+              className="text-blue-500 hover:text-blue-700"  
+            >  
+              <Copy size={16} />  
+            </button>  
+          </div>  
+
+          <p className="text-gray-800 font-medium">  
+            ₹{order.totalPrice || order.amount}  
+          </p>  
+        </div>  
+
+        {/* Track Button */}  
+        <button  
+          onClick={() => navigate(`/track/${order.id}`)}  
+          className="px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600"  
+        >  
+          Track  
+        </button>  
+      </div>  
+    ))}  
+  </div>  
+</div>
+
+);
 };
 
 export default OrderHistory;
