@@ -1,99 +1,107 @@
 import React, { useEffect, useState } from "react";
-import { db, auth } from "../firebase";
+import { useAuth } from "../context/AuthContext"; // authentication context
+import { db } from "../firebase";
 import { collection, query, where, orderBy, onSnapshot } from "firebase/firestore";
-import { onAuthStateChanged } from "firebase/auth";
-import { useNavigate } from "react-router-dom";
 
 const OrderHistory = () => {
+  const { currentUser } = useAuth();
   const [orders, setOrders] = useState([]);
   const [loading, setLoading] = useState(true);
-  const navigate = useNavigate();
 
   useEffect(() => {
-    const unsubscribeAuth = onAuthStateChanged(auth, (user) => {
-      if (user) {
-        const q = query(
-          collection(db, "orders"),
-          where("email", "==", user.email),
-          orderBy("createdAt", "desc")
-        );
+    if (!currentUser) {
+      setLoading(false);
+      return;
+    }
 
-        const unsubscribeSnap = onSnapshot(q, (snapshot) => {
-          const fetchedOrders = snapshot.docs.map((doc) => ({
-            id: doc.id,
-            ...doc.data(),
-          }));
-          setOrders(fetchedOrders);
-          setLoading(false);
-        });
+    const q = query(
+      collection(db, "orders"),
+      where("userId", "==", currentUser.uid),
+      orderBy("createdAt", "desc")
+    );
 
-        return () => unsubscribeSnap();
-      } else {
-        setOrders([]);
+    const unsubscribe = onSnapshot(
+      q,
+      (snapshot) => {
+        let data = [];
+        snapshot.forEach((doc) => data.push({ id: doc.id, ...doc.data() }));
+        setOrders(data);
+        setLoading(false);
+      },
+      (error) => {
+        console.error("Error fetching orders:", error);
         setLoading(false);
       }
-    });
+    );
 
-    return () => unsubscribeAuth();
-  }, []);
+    return () => unsubscribe();
+  }, [currentUser]);
 
-  if (loading) return <p className="text-center">Loading orders...</p>;
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center h-[70vh] text-lg font-semibold">
+        Loading your orders...
+      </div>
+    );
+  }
+
+  if (!currentUser) {
+    return (
+      <div className="flex items-center justify-center h-[70vh] text-lg font-semibold">
+        Please login to view your order history.
+      </div>
+    );
+  }
+
+  if (orders.length === 0) {
+    return (
+      <div className="flex items-center justify-center h-[70vh] text-lg font-semibold">
+        No orders found.
+      </div>
+    );
+  }
 
   return (
     <div className="max-w-3xl mx-auto p-4">
-      <h2 className="text-2xl font-bold mb-6 text-center">My Orders</h2>
-
-      {orders.length === 0 ? (
-        <p className="text-center text-gray-500">No orders yet.</p>
-      ) : (
-        <div className="space-y-4">
-          {orders.map((order, index) => (
-            <div
-              key={order.id}
-              className="border rounded-lg shadow p-4 flex flex-col gap-3"
-            >
-              {/* Header */}
-              <div className="flex justify-between items-center">
-                <p className="font-semibold">
-                  {order.method === "COD" ? "Cash on Delivery" : "Takeaway"}
-                </p>
-                <span className="bg-yellow-200 text-yellow-800 px-2 py-1 rounded text-xs font-semibold">
-                  {order.status || "ORDER CONFIRMED"}
-                </span>
-              </div>
-
-              {/* Order Info */}
-              <p className="text-sm text-gray-600">
-                Order #{index + 1} &nbsp; | &nbsp;
-                {order.createdAt?.seconds
-                  ? new Date(order.createdAt.seconds * 1000).toLocaleString()
-                  : "N/A"}
-              </p>
-
-              {/* Item Preview */}
-              <div className="border rounded-md p-3 flex justify-between items-center">
-                <div>
-                  <p className="font-semibold">{order.items?.[0]?.name}</p>
-                  <p className="text-sm text-gray-600">
-                    Qty: {order.items?.[0]?.qty}
-                  </p>
-                </div>
-                <p className="font-bold">₹{order.amount}</p>
-              </div>
-
-              {/* Track Button */}
-              <button
-                onClick={() =>
-                  navigate("/track-order", { state: { order } })
-                }
-                className="bg-red-500 text-white py-2 rounded-md font-semibold"
+      <h2 className="text-2xl font-bold mb-4">Your Orders</h2>
+      <div className="space-y-4">
+        {orders.map((order) => (
+          <div
+            key={order.id}
+            className="bg-white dark:bg-gray-800 shadow-md rounded-lg p-4 border border-gray-200 dark:border-gray-700"
+          >
+            <div className="flex justify-between items-center mb-2">
+              <span className="text-sm text-gray-600 dark:text-gray-400">
+                Order ID: {order.id}
+              </span>
+              <span
+                className={`px-3 py-1 text-sm rounded-full ${
+                  order.status === "Delivered"
+                    ? "bg-green-100 text-green-700"
+                    : "bg-yellow-100 text-yellow-700"
+                }`}
               >
-                Track
-              </button>
+                {order.status || "Pending"}
+              </span>
             </div>
-          ))}
-        </div>
-      )}
+            <div className="text-gray-800 dark:text-gray-200">
+              {order.items?.map((item, index) => (
+                <p key={index}>
+                  {item.name} x {item.quantity}
+                </p>
+              ))}
+            </div>
+            <div className="mt-2 text-sm text-gray-600 dark:text-gray-400">
+              Total: ₹{order.total || 0}
+            </div>
+            <div className="mt-1 text-xs text-gray-500">
+              {order.createdAt?.toDate
+                ? order.createdAt.toDate().toLocaleString()
+                : ""}
+            </div>
+          </div>
+        ))}
+      </div>
     </div>
   );
 };
