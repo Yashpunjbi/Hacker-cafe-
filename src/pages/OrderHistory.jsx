@@ -1,64 +1,46 @@
 import React, { useEffect, useState } from "react";
-import { useAuth } from "../context/AuthContext"; // authentication context
-import { db } from "../firebase";
-import { collection, query, where, orderBy, onSnapshot } from "firebase/firestore";
+import { db, auth } from "../firebase"; // firebase.js me auth export karna
+import { collection, query, where, getDocs } from "firebase/firestore";
 
 const OrderHistory = () => {
-  const { currentUser } = useAuth();
   const [orders, setOrders] = useState([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    if (!currentUser) {
-      setLoading(false);
-      return;
-    }
+    const fetchOrders = async () => {
+      try {
+        const user = auth.currentUser; // current login user
+        if (!user) {
+          setLoading(false);
+          return;
+        }
 
-    const q = query(
-      collection(db, "orders"),
-      where("userId", "==", currentUser.uid),
-      orderBy("createdAt", "desc")
-    );
+        const q = query(
+          collection(db, "orders"),
+          where("userId", "==", user.uid)
+        );
 
-    const unsubscribe = onSnapshot(
-      q,
-      (snapshot) => {
-        let data = [];
-        snapshot.forEach((doc) => data.push({ id: doc.id, ...doc.data() }));
-        setOrders(data);
-        setLoading(false);
-      },
-      (error) => {
-        console.error("Error fetching orders:", error);
+        const querySnapshot = await getDocs(q);
+        const ordersList = querySnapshot.docs.map((doc) => ({
+          id: doc.id,
+          ...doc.data(),
+        }));
+
+        setOrders(ordersList);
+      } catch (error) {
+        console.error("Error fetching orders: ", error);
+      } finally {
         setLoading(false);
       }
-    );
+    };
 
-    return () => unsubscribe();
-  }, [currentUser]);
+    fetchOrders();
+  }, []);
 
-  if (loading) {
-    return (
-      <div className="flex items-center justify-center h-[70vh] text-lg font-semibold">
-        Loading your orders...
-      </div>
-    );
-  }
-
-  if (!currentUser) {
-    return (
-      <div className="flex items-center justify-center h-[70vh] text-lg font-semibold">
-        Please login to view your order history.
-      </div>
-    );
-  }
+  if (loading) return <p className="text-center mt-10">Loading your orders...</p>;
 
   if (orders.length === 0) {
-    return (
-      <div className="flex items-center justify-center h-[70vh] text-lg font-semibold">
-        No orders found.
-      </div>
-    );
+    return <p className="text-center mt-10">No past orders found.</p>;
   }
 
   return (
@@ -68,37 +50,19 @@ const OrderHistory = () => {
         {orders.map((order) => (
           <div
             key={order.id}
-            className="bg-white dark:bg-gray-800 shadow-md rounded-lg p-4 border border-gray-200 dark:border-gray-700"
+            className="p-4 border rounded-xl shadow-md bg-white flex justify-between items-center"
           >
-            <div className="flex justify-between items-center mb-2">
-              <span className="text-sm text-gray-600 dark:text-gray-400">
-                Order ID: {order.id}
-              </span>
-              <span
-                className={`px-3 py-1 text-sm rounded-full ${
-                  order.status === "Delivered"
-                    ? "bg-green-100 text-green-700"
-                    : "bg-yellow-100 text-yellow-700"
-                }`}
-              >
-                {order.status || "Pending"}
-              </span>
+            <div>
+              <p className="font-semibold text-lg">{order.items?.[0]?.name || "Order"}</p>
+              <p className="text-sm text-gray-600">Order ID: {order.id}</p>
+              <p className="text-gray-800 font-medium">₹{order.totalPrice}</p>
             </div>
-            <div className="text-gray-800 dark:text-gray-200">
-              {order.items?.map((item, index) => (
-                <p key={index}>
-                  {item.name} x {item.quantity}
-                </p>
-              ))}
-            </div>
-            <div className="mt-2 text-sm text-gray-600 dark:text-gray-400">
-              Total: ₹{order.total || 0}
-            </div>
-            <div className="mt-1 text-xs text-gray-500">
-              {order.createdAt?.toDate
-                ? order.createdAt.toDate().toLocaleString()
-                : ""}
-            </div>
+            <button
+              onClick={() => (window.location.href = `/track/${order.id}`)}
+              className="px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600"
+            >
+              Track
+            </button>
           </div>
         ))}
       </div>
