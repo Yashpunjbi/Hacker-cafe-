@@ -29,12 +29,6 @@ const UserMenu = ({ user, onLogout }) => {
           onClick={() => navigate("/track")}
           className="px-5 py-3 hover:bg-gray-100 cursor-pointer flex items-center gap-2"
         >
-          🚚 Track Orders
-        </li>
-        <li
-          onClick={() => navigate("/contact")}
-          className="px-5 py-3 hover:bg-gray-100 cursor-pointer flex items-center gap-2"
-        >
           📞 Contact Us
         </li>
         <li
