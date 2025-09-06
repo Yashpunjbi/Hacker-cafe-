@@ -1,13 +1,12 @@
-
 import React, { useEffect, useState } from "react";
 import { db } from "../firebase";
 import { doc, getDoc } from "firebase/firestore";
 import { useParams } from "react-router-dom";
-import { CheckCircle, Pizza, Oven, Utensils, ShoppingBag } from "lucide-react";
+import { Pizza, Microwave, Utensils, ShoppingBag } from "lucide-react";
 
 const steps = [
   { label: "Order Confirmed", icon: Pizza },
-  { label: "Being Baked", icon: Oven },
+  { label: "Being Baked", icon: Microwave },
   { label: "Order is Ready", icon: Utensils },
   { label: "Order Picked Up", icon: ShoppingBag },
 ];
