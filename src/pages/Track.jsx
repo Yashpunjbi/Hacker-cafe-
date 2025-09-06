@@ -1,12 +1,12 @@
 import React, { useEffect, useState } from "react";
 import { db } from "../firebase";
-import { doc, onSnapshot } from "firebase/firestore";
+import { doc, getDoc } from "firebase/firestore";
 import { useParams } from "react-router-dom";
-import { Pizza, Microwave, Utensils, ShoppingBag } from "lucide-react";
+import { CheckCircle, Pizza, Oven, Utensils, ShoppingBag } from "lucide-react";
 
 const steps = [
   { label: "Order Confirmed", icon: Pizza },
-  { label: "Being Baked", icon: Microwave },
+  { label: "Being Baked", icon: Oven },
   { label: "Order is Ready", icon: Utensils },
   { label: "Order Picked Up", icon: ShoppingBag },
 ];
@@ -16,20 +16,19 @@ const Track = () => {
   const [order, setOrder] = useState(null);
 
   useEffect(() => {
-    if (!orderId) return;
-
-    const docRef = doc(db, "orders", orderId);
-
-    // ✅ Live listener
-    const unsub = onSnapshot(docRef, (snap) => {
-      if (snap.exists()) {
-        setOrder(snap.data());
-      } else {
-        setOrder(null);
+    const fetchOrder = async () => {
+      try {
+        const docRef = doc(db, "orders", orderId);
+        const snap = await getDoc(docRef);
+        if (snap.exists()) {
+          setOrder(snap.data());
+        }
+      } catch (err) {
+        console.error("Error fetching order:", err);
       }
-    });
+    };
 
-    return () => unsub(); // cleanup on unmount
+    fetchOrder();
   }, [orderId]);
 
   const currentStep = order?.status
@@ -72,7 +71,7 @@ const Track = () => {
           })}
         </div>
 
-        {/* Live Message */}
+        {/* Message */}
         <p className="mt-6 text-center text-gray-700 font-medium">
           {order?.status === "Order Confirmed" &&
             "Your order is confirmed and will start soon."}
