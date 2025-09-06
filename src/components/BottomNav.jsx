@@ -105,6 +105,15 @@ const BottomNavbar = () => {
                   }}
                   className="block w-full px-4 py-2 text-left hover:bg-gray-100"
                 >
+                  Track Order
+                </button>
+                <button
+                  onClick={() => {
+                    navigate("/contact");
+                    setShowDropdown(false);
+                  }}
+                  className="block w-full px-4 py-2 text-left hover:bg-gray-100"
+                >
                   Contact Us
                 </button>
                 <button
