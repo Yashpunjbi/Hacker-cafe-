@@ -1,8 +1,8 @@
 import React, { useEffect, useState } from "react";
 import { db } from "../firebase";
-import { doc, getDoc } from "firebase/firestore";
+import { doc, onSnapshot } from "firebase/firestore";
 import { useParams } from "react-router-dom";
-import { CheckCircle, Pizza, Oven, Utensils, ShoppingBag } from "lucide-react";
+import { Pizza, Oven, Utensils, ShoppingBag } from "lucide-react";
 
 const steps = [
   { label: "Order Confirmed", icon: Pizza },
@@ -14,21 +14,26 @@ const steps = [
 const Track = () => {
   const { orderId } = useParams();
   const [order, setOrder] = useState(null);
+  const [currentTime, setCurrentTime] = useState(new Date());
 
   useEffect(() => {
-    const fetchOrder = async () => {
-      try {
-        const docRef = doc(db, "orders", orderId);
-        const snap = await getDoc(docRef);
-        if (snap.exists()) {
-          setOrder(snap.data());
-        }
-      } catch (err) {
-        console.error("Error fetching order:", err);
-      }
-    };
+    // Live time update
+    const timer = setInterval(() => {
+      setCurrentTime(new Date());
+    }, 1000);
+    return () => clearInterval(timer);
+  }, []);
 
-    fetchOrder();
+  useEffect(() => {
+    // Real-time Firestore listener
+    const docRef = doc(db, "orders", orderId);
+    const unsubscribe = onSnapshot(docRef, (snap) => {
+      if (snap.exists()) {
+        setOrder(snap.data());
+      }
+    });
+
+    return () => unsubscribe();
   }, [orderId]);
 
   const currentStep = order?.status
@@ -70,18 +75,6 @@ const Track = () => {
             );
           })}
         </div>
-
-        {/* Message */}
-        <p className="mt-6 text-center text-gray-700 font-medium">
-          {order?.status === "Order Confirmed" &&
-            "Your order is confirmed and will start soon."}
-          {order?.status === "Being Baked" &&
-            "Your order is being baked 🍕, please wait..."}
-          {order?.status === "Order is Ready" &&
-            "Your order is ready for pickup 🚀"}
-          {order?.status === "Order Picked Up" &&
-            "Your order has been picked up ✅"}
-        </p>
       </div>
 
       {/* Order Details */}
@@ -90,19 +83,19 @@ const Track = () => {
           <strong>Order ID:</strong> {orderId}
         </p>
         <p>
-          <strong>Status:</strong> {order?.status || "Pending"}
-        </p>
-        <p>
           <strong>Total:</strong> ₹{order?.totalAmount || 0}
         </p>
         <p>
           <strong>Address:</strong> {order?.address || "-"}
         </p>
         <p>
-          <strong>Date:</strong>{" "}
+          <strong>Order Placed:</strong>{" "}
           {order?.createdAt?.toDate
             ? order.createdAt.toDate().toLocaleString()
             : "-"}
+        </p>
+        <p>
+          <strong>Current Time:</strong> {currentTime.toLocaleString()}
         </p>
       </div>
     </div>
