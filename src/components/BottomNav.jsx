@@ -36,3 +36,5 @@
     </button>
   </div>
 )}
+
+export default BottomNav;
