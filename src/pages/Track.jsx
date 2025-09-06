@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from "react";
 import { db } from "../firebase";
-import { doc, getDoc } from "firebase/firestore";
+import { doc, onSnapshot } from "firebase/firestore";
 import { useParams } from "react-router-dom";
 import { Pizza, Microwave, Utensils, ShoppingBag } from "lucide-react";
 
@@ -16,19 +16,20 @@ const Track = () => {
   const [order, setOrder] = useState(null);
 
   useEffect(() => {
-    const fetchOrder = async () => {
-      try {
-        const docRef = doc(db, "orders", orderId);
-        const snap = await getDoc(docRef);
-        if (snap.exists()) {
-          setOrder(snap.data());
-        }
-      } catch (err) {
-        console.error("Error fetching order:", err);
-      }
-    };
+    if (!orderId) return;
 
-    fetchOrder();
+    const docRef = doc(db, "orders", orderId);
+
+    // ✅ Live listener
+    const unsub = onSnapshot(docRef, (snap) => {
+      if (snap.exists()) {
+        setOrder(snap.data());
+      } else {
+        setOrder(null);
+      }
+    });
+
+    return () => unsub(); // cleanup on unmount
   }, [orderId]);
 
   const currentStep = order?.status
@@ -71,7 +72,7 @@ const Track = () => {
           })}
         </div>
 
-        {/* Message */}
+        {/* Live Message */}
         <p className="mt-6 text-center text-gray-700 font-medium">
           {order?.status === "Order Confirmed" &&
             "Your order is confirmed and will start soon."}
