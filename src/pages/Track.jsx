@@ -1,114 +1,104 @@
 import React, { useEffect, useState } from "react";
 import { db } from "../firebase";
-import { doc, getDoc } from "firebase/firestore";
+import { doc, onSnapshot } from "firebase/firestore";
 import { useParams } from "react-router-dom";
-import { CheckCircle, Pizza, Oven, Utensils, ShoppingBag } from "lucide-react";
+import { Pizza, Utensils, ShoppingBag, CheckCircle } from "lucide-react";
 
 const steps = [
-{ label: "Order Confirmed", icon: Pizza },
-{ label: "Being Baked", icon: Oven },
-{ label: "Order is Ready", icon: Utensils },
-{ label: "Order Picked Up", icon: ShoppingBag },
+  { label: "Order Confirmed", icon: Pizza },
+  { label: "Being Baked", icon: Utensils },
+  { label: "Order is Ready", icon: CheckCircle },
+  { label: "Order Picked Up", icon: ShoppingBag },
 ];
 
 const Track = () => {
-const { orderId } = useParams();
-const [order, setOrder] = useState(null);
+  const { orderId } = useParams();
+  const [order, setOrder] = useState(null);
 
-useEffect(() => {
-const fetchOrder = async () => {
-try {
-const docRef = doc(db, "orders", orderId);
-const snap = await getDoc(docRef);
-if (snap.exists()) {
-setOrder(snap.data());
-}
-} catch (err) {
-console.error("Error fetching order:", err);
-}
-};
+  useEffect(() => {
+    const docRef = doc(db, "orders", orderId);
+    const unsubscribe = onSnapshot(docRef, (snap) => {
+      if (snap.exists()) {
+        setOrder(snap.data());
+      }
+    });
 
-fetchOrder();
+    return () => unsubscribe();
+  }, [orderId]);
 
-}, [orderId]);
+  const currentStep = order?.status
+    ? steps.findIndex((s) => s.label === order.status)
+    : -1;
 
-const currentStep = order?.status
-? steps.findIndex((s) => s.label === order.status)
-: -1;
+  return (
+    <div className="max-w-xl mx-auto p-6">
+      <h2 className="text-2xl font-bold text-center mb-6">Track Your Order</h2>
 
-return (
-<div className="max-w-xl mx-auto p-6">
-<h2 className="text-2xl font-bold text-center mb-6">Track Your Order</h2>
+      {/* Progress Tracker */}
+      <div className="bg-white shadow rounded-lg p-6">
+        <div className="flex justify-between items-center relative">
+          {/* Line */}
+          <div className="absolute top-6 left-0 w-full h-1 bg-gray-300 -z-10"></div>
 
-{/* Progress Tracker */}  
-  <div className="bg-white shadow rounded-lg p-6">  
-    <div className="flex justify-between items-center relative">  
-      {/* Line */}  
-      <div className="absolute top-6 left-0 w-full h-1 bg-gray-300 -z-10"></div>  
+          {steps.map((step, index) => {
+            const Icon = step.icon;
+            const isActive = index <= currentStep;
+            return (
+              <div key={index} className="flex flex-col items-center w-1/4">
+                <div
+                  className={`w-12 h-12 rounded-full flex items-center justify-center border-2 ${
+                    isActive
+                      ? "bg-green-100 border-green-600 text-green-600"
+                      : "bg-gray-100 border-gray-400 text-gray-400"
+                  }`}
+                >
+                  <Icon size={24} />
+                </div>
+                <p
+                  className={`text-sm mt-2 ${
+                    isActive ? "text-green-600 font-medium" : "text-gray-400"
+                  }`}
+                >
+                  {step.label}
+                </p>
+              </div>
+            );
+          })}
+        </div>
 
-      {steps.map((step, index) => {  
-        const Icon = step.icon;  
-        const isActive = index <= currentStep;  
-        return (  
-          <div key={index} className="flex flex-col items-center w-1/4">  
-            <div  
-              className={`w-12 h-12 rounded-full flex items-center justify-center border-2 ${  
-                isActive  
-                  ? "bg-green-100 border-green-600 text-green-600"  
-                  : "bg-gray-100 border-gray-400 text-gray-400"  
-              }`}  
-            >  
-              <Icon size={24} />  
-            </div>  
-            <p  
-              className={`text-sm mt-2 ${  
-                isActive ? "text-green-600 font-medium" : "text-gray-400"  
-              }`}  
-            >  
-              {step.label}  
-            </p>  
-          </div>  
-        );  
-      })}  
-    </div>  
+        {/* Message */}
+        <p className="mt-6 text-center text-gray-700 font-medium">
+          {order?.status === "Order Confirmed" &&
+            "Your order is confirmed and will start soon."}
+          {order?.status === "Being Baked" &&
+            "Your order is being baked 🍕, please wait..."}
+          {order?.status === "Order is Ready" &&
+            "Your order is ready for pickup 🚀"}
+          {order?.status === "Order Picked Up" &&
+            "Your order has been picked up ✅"}
+        </p>
+      </div>
 
-    {/* Message */}  
-    <p className="mt-6 text-center text-gray-700 font-medium">  
-      {order?.status === "Order Confirmed" &&  
-        "Your order is confirmed and will start soon."}  
-      {order?.status === "Being Baked" &&  
-        "Your order is being baked 🍕, please wait..."}  
-      {order?.status === "Order is Ready" &&  
-        "Your order is ready for pickup 🚀"}  
-      {order?.status === "Order Picked Up" &&  
-        "Your order has been picked up ✅"}  
-    </p>  
-  </div>  
-
-  {/* Order Details */}  
-  <div className="mt-6 p-4 border rounded-lg bg-white shadow">  
-    <p>  
-      <strong>Order ID:</strong> {orderId}  
-    </p>  
-    <p>  
-      <strong>Status:</strong> {order?.status || "Pending"}  
-    </p>  
-    <p>  
-      <strong>Total:</strong> ₹{order?.totalAmount || 0}  
-    </p>  
-    <p>  
-      <strong>Address:</strong> {order?.address || "-"}  
-    </p>  
-    <p>  
-      <strong>Date:</strong>{" "}  
-      {order?.createdAt?.toDate  
-        ? order.createdAt.toDate().toLocaleString()  
-        : "-"}  
-    </p>  
-  </div>  
-</div>
-
-);
+      {/* Order Details */}
+      <div className="mt-6 p-4 border rounded-lg bg-white shadow">
+        <p>
+          <strong>Order ID:</strong> {orderId}
+        </p>
+        <p>
+          <strong>Total:</strong> ₹{order?.totalAmount || 0}
+        </p>
+        <p>
+          <strong>Address:</strong> {order?.address || "-"}
+        </p>
+        <p>
+          <strong>Date:</strong>{" "}
+          {order?.createdAt?.toDate
+            ? order.createdAt.toDate().toLocaleString()
+            : "-"}
+        </p>
+      </div>
+    </div>
+  );
 };
 
 export default Track;
