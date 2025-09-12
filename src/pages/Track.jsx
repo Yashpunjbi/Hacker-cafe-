@@ -9,14 +9,25 @@ export default function Track() {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    if (!orderId) return;
+    if (!orderId) {
+      console.log("❌ No orderId in URL");
+      setLoading(false);
+      return;
+    }
+
+    console.log("🔍 Tracking orderId:", orderId);
 
     const unsub = onSnapshot(doc(db, "orders", orderId), (snap) => {
       if (snap.exists()) {
+        console.log("✅ Order data:", snap.data());
         setOrder({ id: snap.id, ...snap.data() });
       } else {
+        console.log("⚠️ No such order found in Firestore");
         setOrder(null);
       }
+      setLoading(false);
+    }, (err) => {
+      console.error("🔥 Firestore error:", err);
       setLoading(false);
     });
 
@@ -25,7 +36,7 @@ export default function Track() {
 
   if (loading) return <div className="p-4">⏳ Loading your order...</div>;
 
-  if (!order) return <div className="p-4">❌ Order not found</div>;
+  if (!order) return <div className="p-4">❌ Order not found for ID: {orderId}</div>;
 
   return (
     <div className="p-4 space-y-4">
