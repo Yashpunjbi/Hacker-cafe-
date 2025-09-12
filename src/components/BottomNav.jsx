@@ -18,10 +18,10 @@ const BottomNav = ({ showDropdown, setShowDropdown, handleLogout }) => {
             Order History
           </button>
 
-          {/* ✅ Track Order add kiya */}
+          {/* ✅ Simple Track Order page navigation */}
           <button
             onClick={() => {
-              navigate("/track"); // route change karna ho to id ke sath dynamic use kar sakte ho
+              navigate("/track");
               setShowDropdown(false);
             }}
             className="block w-full px-4 py-2 text-left hover:bg-gray-100"
