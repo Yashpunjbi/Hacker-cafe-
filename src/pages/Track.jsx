@@ -1,56 +1,81 @@
-import { useEffect, useState } from "react";
-import { doc, onSnapshot } from "firebase/firestore";
+// src/pages/Track.jsx
+import React, { useEffect, useState } from "react";
 import { useParams } from "react-router-dom";
+import { doc, getDoc } from "firebase/firestore";
 import { db } from "../firebase";
 
-export default function Track() {
-  const { orderId } = useParams();
+const statusStages = ["placed", "preparing", "out for delivery", "delivered"];
+
+const Track = () => {
+  const { orderId } = useParams();   // yaha se orderId aa raha hai
   const [order, setOrder] = useState(null);
-  const [loading, setLoading] = useState(true);
+  const [notFound, setNotFound] = useState(false);
 
   useEffect(() => {
-    if (!orderId) {
-      console.log("❌ No orderId in URL");
-      setLoading(false);
-      return;
-    }
+    const fetchOrder = async () => {
+      if (!orderId) return;
 
-    console.log("🔍 Tracking orderId:", orderId);
+      const docRef = doc(db, "orders", orderId);
+      const snap = await getDoc(docRef);
 
-    const unsub = onSnapshot(doc(db, "orders", orderId), (snap) => {
       if (snap.exists()) {
-        console.log("✅ Order data:", snap.data());
-        setOrder({ id: snap.id, ...snap.data() });
+        setOrder(snap.data());
+        setNotFound(false);
       } else {
-        console.log("⚠️ No such order found in Firestore");
         setOrder(null);
+        setNotFound(true);
       }
-      setLoading(false);
-    }, (err) => {
-      console.error("🔥 Firestore error:", err);
-      setLoading(false);
-    });
+    };
 
-    return () => unsub();
+    fetchOrder();
   }, [orderId]);
 
-  if (loading) return <div className="p-4">⏳ Loading your order...</div>;
-
-  if (!order) return <div className="p-4">❌ Order not found for ID: {orderId}</div>;
+  const currentIndex = statusStages.indexOf(order?.status);
 
   return (
-    <div className="p-4 space-y-4">
-      <h2 className="text-xl font-bold">📦 Order Tracking</h2>
-      <p><strong>Order ID:</strong> {order.id}</p>
-      <p><strong>Status:</strong> {order.status}</p>
-      {order.createdAt && (
-        <p>
-          <strong>Placed At:</strong>{" "}
-          {order.createdAt.toDate
-            ? order.createdAt.toDate().toLocaleString()
-            : order.createdAt}
+    <div className="p-4 max-w-xl mx-auto">
+      <h2 className="text-2xl font-bold mb-4">Track Your Order</h2>
+
+      {notFound && (
+        <p className="text-red-600 font-medium">
+          Order not found. Please check the ID.
         </p>
+      )}
+
+      {order && (
+        <div className="bg-white p-4 rounded shadow">
+          <h3 className="text-xl font-bold mb-3">Order Progress</h3>
+          <div className="space-y-4">
+            {statusStages.map((stage, idx) => (
+              <div key={stage} className="flex items-center space-x-3">
+                <div
+                  className={`w-4 h-4 rounded-full ${
+                    idx <= currentIndex ? "bg-green-500" : "bg-gray-300"
+                  }`}
+                ></div>
+                <p
+                  className={`${
+                    idx <= currentIndex
+                      ? "text-green-600 font-semibold"
+                      : "text-gray-500"
+                  }`}
+                >
+                  {stage.charAt(0).toUpperCase() + stage.slice(1)}
+                </p>
+              </div>
+            ))}
+          </div>
+
+          <div className="mt-6 space-y-1 text-sm">
+            <p><strong>Status:</strong> {order.status}</p>
+            <p><strong>Total:</strong> ₹{order.total || order.totalPrice}</p>
+            <p><strong>Address:</strong> {order.address}</p>
+            <p><strong>Date:</strong> {new Date(order.timestamp?.toDate()).toLocaleString()}</p>
+          </div>
+        </div>
       )}
     </div>
   );
-}
+};
+
+export default Track;
