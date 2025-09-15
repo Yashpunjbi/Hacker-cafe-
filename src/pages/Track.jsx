@@ -27,4 +27,4 @@ const TrackOrder = () => {
   );
 };
 
-export default TrackOrder;
+export default Track;
