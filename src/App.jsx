@@ -31,8 +31,7 @@ const App = () => {
     const unsubscribe = onAuthStateChanged(auth, (currUser) => {
       setUser(currUser);
     });
-
-    return () => unsubscribe(); // cleanup
+    return () => unsubscribe();
   }, []);
 
   return (
@@ -40,6 +39,7 @@ const App = () => {
       <ToastContainer position="bottom-center" autoClose={3000} />
       <Router>
         <Navbar user={user} />
+
         <div className="pb-20 pt-16">
           <Routes>
             <Route path="/" element={<Home />} />
@@ -48,15 +48,18 @@ const App = () => {
             <Route path="/offers" element={<Offers />} />
             <Route path="/checkout" element={<Checkout />} />
             <Route path="/orders" element={<OrderHistory />} />
-            <Route path="/track" element={<Track />} />
             <Route path="/contact" element={<Contact />} />
             <Route path="/terms" element={<Terms />} />
             <Route path="/login" element={<Login />} />
- <Route path="/category/:categoryName" element={<CategoryMenu />} />
-<Route path="/payment-options" element={<PaymentOptions />} />
-<Route path="/Order-Success"element={<OrderSuccess />} />
+            <Route path="/category/:categoryName" element={<CategoryMenu />} />
+            <Route path="/payment-options" element={<PaymentOptions />} />
+            <Route path="/order-success" element={<OrderSuccess />} />
+
+            {/* 🔥 FIXED TRACK ROUTE */}
+            <Route path="/track/:orderId" element={<Track />} />
           </Routes>
         </div>
+
         <BottomNavbar />
       </Router>
     </CartProvider>
