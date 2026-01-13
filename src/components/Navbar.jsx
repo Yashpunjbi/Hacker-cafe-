@@ -1,17 +1,17 @@
 import React, { useState, useEffect } from "react";
-import { Link, useLocation } from "react-router-dom";
+import { Link, useLocation, useNavigate } from "react-router-dom";
 import { getAuth, onAuthStateChanged } from "firebase/auth";
 import { Home, Tag, ShoppingCart, User, LogIn } from "lucide-react";
 import LoginModal from "./LoginModal";
-import UserMenu from "./UserMenu";
 
 const auth = getAuth();
 
 const Navbar = () => {
   const { pathname } = useLocation();
+  const navigate = useNavigate();
+
   const [isLoginOpen, setIsLoginOpen] = useState(false);
   const [user, setUser] = useState(null);
-  const [showUserMenu, setShowUserMenu] = useState(false);
 
   const navItems = [
     { name: "Home", path: "/", icon: Home },
@@ -50,20 +50,24 @@ const Navbar = () => {
           );
         })}
 
-        {/* 👤 Profile or 🔐 Login */}
+        {/* 👤 Profile OR 🔐 Login */}
         {user ? (
-          <div className="relative flex flex-col items-center text-xs">
-            <button
-              onClick={() => setShowUserMenu(!showUserMenu)}
-              className={`flex flex-col items-center transition ${
-                showUserMenu ? "text-red-500" : "text-gray-500"
-              }`}
-            >
-              <User size={22} />
-              <span className="mt-1">Profile</span>
-            </button>
-            {showUserMenu && <UserMenu user={user} />}
-          </div>
+          <button
+            onClick={() => navigate("/profile")}
+            className={`flex flex-col items-center text-xs transition ${
+              pathname === "/profile"
+                ? "text-red-500 font-semibold"
+                : "text-gray-500"
+            }`}
+          >
+            <User
+              size={22}
+              className={
+                pathname === "/profile" ? "text-red-500" : "text-gray-400"
+              }
+            />
+            <span className="mt-1">Profile</span>
+          </button>
         ) : (
           <button
             onClick={() => setIsLoginOpen(true)}
@@ -75,7 +79,7 @@ const Navbar = () => {
         )}
       </nav>
 
-      {/* 🔓 Login Modal */}
+      {/* Login Modal */}
       {isLoginOpen && <LoginModal onClose={() => setIsLoginOpen(false)} />}
     </>
   );
