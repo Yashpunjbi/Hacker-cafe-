@@ -17,6 +17,7 @@ import Terms from "./pages/Terms";
 import CategoryMenu from "./pages/CategoryMenu";
 import PaymentOptions from "./pages/PaymentOptions";
 import OrderSuccess from "./pages/OrderSuccess";
+import Profile from "./pages/Profile";
 
 import BottomNavbar from "./components/BottomNav";
 import Navbar from "./components/Navbar";
@@ -54,6 +55,8 @@ const App = () => {
             <Route path="/category/:categoryName" element={<CategoryMenu />} />
             <Route path="/payment-options" element={<PaymentOptions />} />
             <Route path="/order-success" element={<OrderSuccess />} />
+<Route path="/profile" element={<Profile />} />
+
 
             {/* 🔥 FIXED TRACK ROUTE */}
             <Route path="/track/:orderId" element={<Track />} />
