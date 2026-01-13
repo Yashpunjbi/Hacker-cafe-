@@ -13,12 +13,20 @@ const Home = () => {
 
   useEffect(() => {
     const unsubBanner = onSnapshot(collection(db, "banners"), (snapshot) => {
-      setBanners(snapshot.docs.map((doc) => ({ id: doc.id, ...doc.data() })));
+      const data = snapshot.docs.map((doc) => ({ id: doc.id, ...doc.data() }));
+      setBanners(data);
     });
 
-    const unsubCategories = onSnapshot(collection(db, "categories"), (snapshot) => {
-      setCategories(snapshot.docs.map((doc) => ({ id: doc.id, ...doc.data() })));
-    });
+    const unsubCategories = onSnapshot(
+      collection(db, "categories"),
+      (snapshot) => {
+        const data = snapshot.docs.map((doc) => ({
+          id: doc.id,
+          ...doc.data(),
+        }));
+        setCategories(data);
+      }
+    );
 
     const unsubProducts = onSnapshot(collection(db, "products"), (snapshot) => {
       const allProducts = snapshot.docs.map((doc) => ({
@@ -26,6 +34,7 @@ const Home = () => {
         ...doc.data(),
       }));
 
+      // 👉 Sirf "home" category wale products
       const homeProducts = allProducts.filter((item) =>
         item.category?.toLowerCase().includes("home")
       );
@@ -48,32 +57,22 @@ const Home = () => {
   return (
     <div className="min-h-screen bg-white">
 
-      {/* 🔥 ZOMATO STYLE BANNER (HALF SCREEN) */}
+      {/* 🔥 BANNER (IMAGE ONLY, ADMIN CONTROLLED) */}
       {banners.length > 0 && (
-        <div className="relative w-full h-[50vh] md:h-[55vh] mb-10">
+        <div className="w-full h-[50vh] md:h-[55vh]">
           <img
             src={banners[0].image}
             alt="Banner"
             className="w-full h-full object-cover"
           />
-          <div className="absolute inset-0 bg-black/30 flex items-center justify-center">
-            <div className="text-center text-white px-4">
-              <h1 className="text-3xl md:text-5xl font-extrabold">
-                Bakchodi Kitchen
-              </h1>
-              <p className="mt-2 text-sm md:text-lg opacity-90">
-                Taste jo baar-baar yaad aaye 😋
-              </p>
-            </div>
-          </div>
         </div>
       )}
 
       {/* 🔥 CATEGORIES */}
       {categories.length > 0 && (
-        <div className="max-w-7xl mx-auto px-4 mb-10">
+        <div className="max-w-7xl mx-auto px-4 mt-10 mb-12">
           <h2 className="text-2xl font-bold text-red-500 mb-4">
-            What’s on your mind?
+            Categories
           </h2>
 
           <div className="flex gap-4 overflow-x-auto pb-2">
@@ -96,9 +95,9 @@ const Home = () => {
       )}
 
       {/* 🔥 PRODUCTS */}
-      <div className="max-w-7xl mx-auto px-4">
+      <div className="max-w-7xl mx-auto px-4 mb-16">
         <h2 className="text-3xl font-bold text-center text-red-500 mb-8">
-          Popular Items 🍕
+          Popular Items
         </h2>
 
         {products.length === 0 ? (
@@ -122,6 +121,7 @@ const Home = () => {
                   <h3 className="text-lg font-bold text-gray-800">
                     {item.name}
                   </h3>
+
                   <p className="text-sm text-gray-500 mt-1 line-clamp-2">
                     {item.description}
                   </p>
@@ -145,6 +145,7 @@ const Home = () => {
         )}
       </div>
 
+      {/* bottom space for mobile navbar */}
       <div className="h-20"></div>
     </div>
   );
