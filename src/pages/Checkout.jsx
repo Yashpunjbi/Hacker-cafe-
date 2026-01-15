@@ -10,15 +10,37 @@ const Checkout = () => {
   const [phone, setPhone] = useState("");
   const [address, setAddress] = useState("");
   const [email, setEmail] = useState("");
+  const [loadingLocation, setLoadingLocation] = useState(false);
 
-  const deliveryCharge = 30;
-  const codCharge = 20;
+  const codCharge = 20; // delivery charge removed
   const itemsTotal = cart.reduce((a, b) => a + b.price * b.qty, 0);
-  const totalAmount = itemsTotal + deliveryCharge + codCharge;
+  const totalAmount = itemsTotal + codCharge;
+
+  // 📍 Live Location Function
+  const getLiveLocation = () => {
+    if (!navigator.geolocation) {
+      alert("Geolocation not supported");
+      return;
+    }
+
+    setLoadingLocation(true);
+
+    navigator.geolocation.getCurrentPosition(
+      (position) => {
+        const { latitude, longitude } = position.coords;
+        setAddress(`Lat: ${latitude}, Lng: ${longitude}`);
+        setLoadingLocation(false);
+      },
+      () => {
+        alert("Location permission denied");
+        setLoadingLocation(false);
+      }
+    );
+  };
 
   const handleSubmit = () => {
     if (!phone && !email) {
-      alert("Enter phone or verify email");
+      alert("Please enter phone number or verify email");
       return;
     }
 
@@ -48,9 +70,12 @@ const Checkout = () => {
         <div className="bg-white rounded-xl p-4 space-y-3">
           <h3 className="font-semibold">Delivery Location</h3>
 
-          <button className="w-full flex items-center justify-center gap-2 bg-blue-500 text-white py-3 rounded-lg font-medium">
+          <button
+            onClick={getLiveLocation}
+            className="w-full flex items-center justify-center gap-2 bg-blue-500 text-white py-3 rounded-lg font-medium"
+          >
             <MapPin size={18} />
-            Use My Current Location
+            {loadingLocation ? "Fetching location..." : "Use My Current Location"}
           </button>
 
           <input
@@ -87,51 +112,22 @@ const Checkout = () => {
               className="flex-1 border rounded-lg p-3"
             />
             <button className="px-4 bg-gray-800 text-white rounded-lg">
-              Send OTP
+              Verify
             </button>
-          </div>
-        </div>
-
-        {/* Payment Method */}
-        <div className="bg-white rounded-xl p-4 space-y-3">
-          <h3 className="font-semibold">Payment Method</h3>
-
-          <div className="flex items-center gap-3 border rounded-lg p-3">
-            <span className="text-green-600 text-xl">💵</span>
-            <span className="font-medium">Cash on Delivery</span>
-          </div>
-        </div>
-
-        {/* Price Summary */}
-        <div className="bg-white rounded-xl p-4 text-sm space-y-2">
-          <div className="flex justify-between">
-            <span>Items Total</span>
-            <span>₹{itemsTotal}</span>
-          </div>
-          <div className="flex justify-between">
-            <span>Delivery Charge</span>
-            <span>₹{deliveryCharge}</span>
-          </div>
-          <div className="flex justify-between">
-            <span>COD Charge</span>
-            <span>₹{codCharge}</span>
-          </div>
-          <div className="flex justify-between font-semibold border-t pt-2">
-            <span>Total Payable</span>
-            <span>₹{totalAmount}</span>
           </div>
         </div>
 
         {/* Continue Button */}
         <button
           onClick={handleSubmit}
+          disabled={!phone && !email}
           className={`w-full py-4 rounded-xl font-semibold text-white ${
             phone || email
               ? "bg-gray-900"
               : "bg-gray-300 cursor-not-allowed"
           }`}
         >
-          Enter Phone OR Verify Email
+          Continue to Payment
         </button>
       </div>
     </div>
