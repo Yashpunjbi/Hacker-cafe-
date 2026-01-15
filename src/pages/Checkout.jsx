@@ -2,12 +2,13 @@ import React, { useState } from "react";
 import { useCart } from "../context/CartContext";
 import { useNavigate } from "react-router-dom";
 import { collection, getDocs } from "firebase/firestore";
-import { db } from "../firebase"; // 🔥 apna firebase config path
+import { db } from "../firebase";
 
 const Checkout = () => {
   const { cart } = useCart();
   const navigate = useNavigate();
 
+  const [name, setName] = useState(""); // ✅ NEW
   const [phone, setPhone] = useState("");
   const [email, setEmail] = useState("");
   const [address, setAddress] = useState("");
@@ -22,12 +23,10 @@ const Checkout = () => {
     0
   );
 
-  // ✅ delivery charge ONLY after location
   const deliveryCharge = address ? 30 : 0;
-
   const totalAmount = itemsTotal + deliveryCharge - discount;
 
-  // 📍 LIVE LOCATION → FULL ADDRESS
+  // 📍 LIVE LOCATION
   const getCurrentLocation = () => {
     if (!navigator.geolocation) {
       alert("Location not supported");
@@ -63,7 +62,7 @@ const Checkout = () => {
     );
   };
 
-  // 🎟 PROMO FROM FIREBASE
+  // 🎟 PROMO
   const applyPromo = async () => {
     if (!promo) return alert("Enter promo code");
 
@@ -81,22 +80,22 @@ const Checkout = () => {
       }
     });
 
-    if (found) {
-      alert("Promo applied successfully");
-    } else {
+    if (found) alert("Promo applied");
+    else {
       alert("Invalid or expired promo code");
       setDiscount(0);
     }
   };
 
   const handlePlaceOrder = () => {
-    if (!phone || !address || cart.length === 0) {
+    if (!name || !phone || !address || cart.length === 0) {
       alert("Please fill all required details");
       return;
     }
 
     navigate("/payment-options", {
       state: {
+        name,        // ✅ PASS NAME
         phone,
         email,
         address,
@@ -114,12 +113,22 @@ const Checkout = () => {
     <div className="min-h-screen bg-gray-100 px-4 py-6 max-w-md mx-auto">
       <h2 className="text-xl font-bold mb-4">Checkout</h2>
 
-      {/* 📍 DELIVERY LOCATION */}
+      {/* 👤 NAME */}
+      <div className="bg-white p-4 rounded-xl mb-4">
+        <p className="font-semibold mb-2">Full Name</p>
+        <input
+          type="text"
+          className="w-full border rounded-lg p-2"
+          placeholder="Your Name"
+          value={name}
+          onChange={(e) => setName(e.target.value)}
+        />
+      </div>
+
+      {/* 📍 LOCATION */}
       <div className="bg-white p-4 rounded-xl mb-4">
         <p className="font-semibold mb-2">Delivery Location</p>
-
         <button
-          type="button"
           onClick={getCurrentLocation}
           className="w-full bg-blue-600 text-white py-2 rounded-lg mb-3"
         >
