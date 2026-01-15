@@ -1,27 +1,35 @@
 import React, { useState } from "react";
 import { useCart } from "../context/CartContext";
 import { useNavigate } from "react-router-dom";
-import { ArrowLeft, MapPin, Mail } from "lucide-react";
 
 const Checkout = () => {
   const { cart } = useCart();
   const navigate = useNavigate();
 
   const [phone, setPhone] = useState("");
-  const [address, setAddress] = useState("");
   const [email, setEmail] = useState("");
-  const [promoCode, setPromoCode] = useState("");
-  const [discount, setDiscount] = useState(0);
-  const [promoApplied, setPromoApplied] = useState(false);
+  const [address, setAddress] = useState("");
   const [loadingLocation, setLoadingLocation] = useState(false);
 
-  const deliveryCharge = 30;
-  const codCharge = 20;
-  const itemsTotal = cart.reduce((a, b) => a + b.price * b.qty, 0);
-  const totalAmount = itemsTotal + deliveryCharge + codCharge - discount;
+  const [promo, setPromo] = useState("");
+  const [discount, setDiscount] = useState(0);
 
-  // 📍 Get Current Location
-  const handleLocation = () => {
+  const [paymentMethod, setPaymentMethod] = useState("COD");
+
+  const itemsTotal = cart.reduce(
+    (acc, item) => acc + item.price * item.qty,
+    0
+  );
+
+  // 🔁 Charges will depend on location
+  const deliveryCharge = address ? 30 : 0;
+  const codCharge = paymentMethod === "COD" ? 20 : 0;
+
+  const totalAmount =
+    itemsTotal + deliveryCharge + codCharge - discount;
+
+  // 📍 GET CURRENT LOCATION → ADDRESS
+  const getCurrentLocation = () => {
     if (!navigator.geolocation) {
       alert("Location not supported");
       return;
@@ -30,12 +38,21 @@ const Checkout = () => {
     setLoadingLocation(true);
 
     navigator.geolocation.getCurrentPosition(
-      async (pos) => {
-        const { latitude, longitude } = pos.coords;
+      async (position) => {
+        const { latitude, longitude } = position.coords;
 
-        // Simple auto-fill (exact address API baad me add kar sakte)
-        setAddress(`Lat: ${latitude.toFixed(4)}, Lng: ${longitude.toFixed(4)}`);
-        setLoadingLocation(false);
+        try {
+          const res = await fetch(
+            `https://nominatim.openstreetmap.org/reverse?format=json&lat=${latitude}&lon=${longitude}`
+          );
+          const data = await res.json();
+
+          setAddress(data.display_name || "");
+        } catch (err) {
+          alert("Failed to fetch address");
+        } finally {
+          setLoadingLocation(false);
+        }
       },
       () => {
         alert("Location permission denied");
@@ -44,31 +61,22 @@ const Checkout = () => {
     );
   };
 
-  // 🎟 Promo Code
+  // 🎟 PROMO CODE
   const applyPromo = () => {
-    const code = promoCode.trim().toLowerCase();
-
-    if (promoApplied) return;
-
-    if (code === "free30") {
-      setDiscount(30);
-      setPromoApplied(true);
-    } else if (code === "save50") {
+    if (promo === "SAVE50") {
       setDiscount(50);
-      setPromoApplied(true);
+      alert("₹50 discount applied");
     } else {
-      alert("Invalid Promo Code");
+      alert("Invalid promo code");
+      setDiscount(0);
     }
   };
 
-  const handleSubmit = () => {
-    if (!phone && !email) {
-      alert("Enter phone OR verify email");
-      return;
-    }
+  const handlePlaceOrder = (e) => {
+    e.preventDefault();
 
-    if (!address) {
-      alert("Please enter delivery address");
+    if (!phone || !address || cart.length === 0) {
+      alert("Please fill all required details");
       return;
     }
 
@@ -83,139 +91,142 @@ const Checkout = () => {
         codCharge,
         discount,
         totalAmount,
+        paymentMethod,
       },
     });
   };
 
   return (
-    <div className="min-h-screen bg-gray-100 pb-28">
-      {/* Header */}
-      <div className="bg-white px-4 py-4 flex items-center gap-3 shadow-sm">
-        <button onClick={() => navigate(-1)}>
-          <ArrowLeft />
-        </button>
-        <h2 className="text-lg font-semibold">Checkout</h2>
-      </div>
+    <div className="min-h-screen bg-gray-100 px-4 py-6 max-w-md mx-auto">
+      <h2 className="text-xl font-bold mb-4">Checkout</h2>
 
-      <div className="p-4 space-y-6">
-        {/* Delivery Location */}
-        <div className="bg-white rounded-xl p-4 space-y-3">
-          <h3 className="font-semibold">Delivery Location</h3>
+      {/* 📍 DELIVERY LOCATION */}
+      <div className="bg-white p-4 rounded-xl mb-4">
+        <p className="font-semibold mb-2">Delivery Location</p>
 
-          <button
-            onClick={handleLocation}
-            className="w-full flex items-center justify-center gap-2 bg-blue-500 text-white py-3 rounded-lg font-medium"
-          >
-            <MapPin size={18} />
-            {loadingLocation ? "Fetching location..." : "Use My Current Location"}
-          </button>
-
-          <input
-            type="text"
-            placeholder="House / Flat No., Landmark"
-            value={address}
-            onChange={(e) => setAddress(e.target.value)}
-            className="w-full border rounded-lg p-3"
-          />
-        </div>
-
-        {/* Phone */}
-        <div className="bg-white rounded-xl p-4 space-y-3">
-          <h3 className="font-semibold">Phone Number</h3>
-          <input
-            type="tel"
-            placeholder="Mobile Number"
-            value={phone}
-            onChange={(e) => setPhone(e.target.value)}
-            className="w-full border rounded-lg p-3"
-          />
-        </div>
-
-        {/* Email / Gmail */}
-        <div className="bg-white rounded-xl p-4 space-y-3">
-          <h3 className="font-semibold">Email (Optional)</h3>
-          <div className="flex gap-2">
-            <input
-              type="email"
-              placeholder="example@gmail.com"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              className="flex-1 border rounded-lg p-3"
-            />
-            <button className="px-4 bg-gray-800 text-white rounded-lg flex items-center gap-1">
-              <Mail size={16} /> Gmail
-            </button>
-          </div>
-        </div>
-
-        {/* Promo Code */}
-        <div className="bg-white rounded-xl p-4 space-y-3">
-          <h3 className="font-semibold">Promo Code</h3>
-          <div className="flex gap-2">
-            <input
-              type="text"
-              placeholder="Enter promo code"
-              value={promoCode}
-              onChange={(e) => setPromoCode(e.target.value)}
-              disabled={promoApplied}
-              className="flex-1 border rounded-lg p-3"
-            />
-            <button
-              onClick={applyPromo}
-              disabled={promoApplied}
-              className="px-4 bg-green-600 text-white rounded-lg"
-            >
-              {promoApplied ? "Applied" : "Apply"}
-            </button>
-          </div>
-        </div>
-
-        {/* Payment */}
-        <div className="bg-white rounded-xl p-4 space-y-3">
-          <h3 className="font-semibold">Payment Method</h3>
-          <div className="border rounded-lg p-3 font-medium">
-            💵 Cash on Delivery
-          </div>
-        </div>
-
-        {/* Price Summary */}
-        <div className="bg-white rounded-xl p-4 text-sm space-y-2">
-          <div className="flex justify-between">
-            <span>Items Total</span>
-            <span>₹{itemsTotal}</span>
-          </div>
-          <div className="flex justify-between">
-            <span>Delivery Charge</span>
-            <span>₹{deliveryCharge}</span>
-          </div>
-          <div className="flex justify-between">
-            <span>COD Charge</span>
-            <span>₹{codCharge}</span>
-          </div>
-          {discount > 0 && (
-            <div className="flex justify-between text-green-600">
-              <span>Promo Discount</span>
-              <span>-₹{discount}</span>
-            </div>
-          )}
-          <div className="flex justify-between font-semibold border-t pt-2">
-            <span>Total Payable</span>
-            <span>₹{totalAmount}</span>
-          </div>
-        </div>
-
-        {/* Submit */}
         <button
-          onClick={handleSubmit}
-          className={`w-full py-4 rounded-xl font-semibold text-white ${
-            phone || email
-              ? "bg-gray-900"
-              : "bg-gray-300 cursor-not-allowed"
-          }`}
+          type="button"
+          onClick={getCurrentLocation}
+          className="w-full bg-blue-500 text-white py-2 rounded-lg mb-3"
         >
-          Continue & Pay ₹{totalAmount}
+          {loadingLocation ? "Fetching location..." : "Use My Current Location"}
         </button>
+
+        <textarea
+          className="w-full border rounded-lg p-2"
+          placeholder="House no, street, area, city, pincode"
+          value={address}
+          onChange={(e) => setAddress(e.target.value)}
+        />
       </div>
+
+      {/* 📞 PHONE */}
+      <div className="bg-white p-4 rounded-xl mb-4">
+        <p className="font-semibold mb-2">Phone Number</p>
+        <input
+          type="tel"
+          className="w-full border rounded-lg p-2"
+          placeholder="Mobile Number"
+          value={phone}
+          onChange={(e) => setPhone(e.target.value)}
+        />
+      </div>
+
+      {/* 📧 EMAIL */}
+      <div className="bg-white p-4 rounded-xl mb-4">
+        <p className="font-semibold mb-2">Email (Optional)</p>
+        <div className="flex gap-2">
+          <input
+            type="email"
+            className="flex-1 border rounded-lg p-2"
+            placeholder="example@gmail.com"
+            value={email}
+            onChange={(e) => setEmail(e.target.value)}
+          />
+          <button
+            type="button"
+            className="bg-black text-white px-4 rounded-lg"
+          >
+            Gmail
+          </button>
+        </div>
+      </div>
+
+      {/* 🎟 PROMO CODE */}
+      <div className="bg-white p-4 rounded-xl mb-4">
+        <p className="font-semibold mb-2">Promo Code</p>
+        <div className="flex gap-2">
+          <input
+            className="flex-1 border rounded-lg p-2"
+            placeholder="Enter promo code"
+            value={promo}
+            onChange={(e) => setPromo(e.target.value)}
+          />
+          <button
+            type="button"
+            onClick={applyPromo}
+            className="bg-green-500 text-white px-4 rounded-lg"
+          >
+            Apply
+          </button>
+        </div>
+      </div>
+
+      {/* 💳 PAYMENT METHOD */}
+      <div className="bg-white p-4 rounded-xl mb-4">
+        <p className="font-semibold mb-2">Payment Method</p>
+
+        <label className="flex items-center gap-2 mb-2">
+          <input
+            type="radio"
+            checked={paymentMethod === "COD"}
+            onChange={() => setPaymentMethod("COD")}
+          />
+          Cash on Delivery
+        </label>
+
+        <label className="flex items-center gap-2">
+          <input
+            type="radio"
+            checked={paymentMethod === "ONLINE"}
+            onChange={() => setPaymentMethod("ONLINE")}
+          />
+          Online Payment (UPI / Card)
+        </label>
+      </div>
+
+      {/* 💰 BILL SUMMARY */}
+      <div className="bg-white p-4 rounded-xl mb-6 text-sm">
+        <div className="flex justify-between">
+          <span>Items Total</span>
+          <span>₹{itemsTotal}</span>
+        </div>
+        <div className="flex justify-between">
+          <span>Delivery</span>
+          <span>₹{deliveryCharge}</span>
+        </div>
+        <div className="flex justify-between">
+          <span>COD Charge</span>
+          <span>₹{codCharge}</span>
+        </div>
+        {discount > 0 && (
+          <div className="flex justify-between text-green-600">
+            <span>Promo Discount</span>
+            <span>-₹{discount}</span>
+          </div>
+        )}
+        <div className="flex justify-between font-bold border-t pt-2 mt-2">
+          <span>Total Payable</span>
+          <span>₹{totalAmount}</span>
+        </div>
+      </div>
+
+      <button
+        onClick={handlePlaceOrder}
+        className="w-full bg-red-500 text-white py-3 rounded-xl font-semibold"
+      >
+        Place Order
+      </button>
     </div>
   );
 };
