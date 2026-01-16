@@ -20,6 +20,22 @@ const statusSteps = [
   { key: "OutForDelivery", label: "Out for Delivery", icon: Bike },
 ];
 
+// 🚀 Delivery time logic
+const getETA = (status) => {
+  switch (status) {
+    case "Placed":
+      return "35–45 minutes";
+    case "Preparing":
+      return "25–35 minutes";
+    case "Ready":
+      return "15–20 minutes";
+    case "OutForDelivery":
+      return "5–10 minutes";
+    default:
+      return "Calculating...";
+  }
+};
+
 const TrackOrder = () => {
   const [orderId, setOrderId] = useState("");
   const [orderData, setOrderData] = useState(null);
@@ -63,9 +79,7 @@ const TrackOrder = () => {
         {/* Header */}
         <div className="bg-red-500 text-white p-6 text-center">
           <h2 className="text-2xl font-bold">Track Your Order</h2>
-          <p className="text-sm opacity-90 mt-1">
-            Real-time order status
-          </p>
+          <p className="text-sm opacity-90 mt-1">Real-time order status</p>
         </div>
 
         {/* Input */}
@@ -87,9 +101,7 @@ const TrackOrder = () => {
           </div>
 
           {error && (
-            <p className="text-red-500 text-center text-sm">
-              {error}
-            </p>
+            <p className="text-red-500 text-center text-sm">{error}</p>
           )}
         </div>
 
@@ -103,14 +115,10 @@ const TrackOrder = () => {
               <div className="space-y-4">
                 {statusSteps.map((step, index) => {
                   const Icon = step.icon;
-                  const active =
-                    index <= getStepIndex(orderData.status);
+                  const active = index <= getStepIndex(orderData.status);
 
                   return (
-                    <div
-                      key={step.key}
-                      className="flex items-center gap-3"
-                    >
+                    <div key={step.key} className="flex items-center gap-3">
                       <div
                         className={`w-9 h-9 flex items-center justify-center rounded-full ${
                           active
@@ -133,6 +141,14 @@ const TrackOrder = () => {
               </div>
             </div>
 
+            {/* ETA */}
+            <div className="bg-green-50 border border-green-200 rounded-xl p-4 text-center">
+              <p className="text-sm text-gray-600">Estimated Delivery Time</p>
+              <p className="text-xl font-bold text-green-600 mt-1">
+                {getETA(orderData.status)}
+              </p>
+            </div>
+
             {/* Customer Info */}
             <div className="bg-gray-50 rounded-xl p-4 text-sm space-y-2">
               <p className="flex items-center gap-2">
@@ -147,22 +163,20 @@ const TrackOrder = () => {
               </p>
             </div>
 
-            {/* Payment */}
+            {/* Total Amount */}
             <div className="flex justify-between items-center border-t pt-3 text-sm font-semibold">
               <span className="flex items-center gap-1">
-                <IndianRupee size={16} /> Total
+                <IndianRupee size={16} /> Total Amount
               </span>
-              <span className="text-green-600">
-                ₹{orderData.total}
+              <span className="text-green-600 text-lg">
+                ₹{orderData.amount}
               </span>
             </div>
           </div>
         )}
 
         {loading && (
-          <p className="text-center py-4 text-gray-500">
-            Tracking your order...
-          </p>
+          <p className="text-center py-4 text-gray-500">Tracking your order...</p>
         )}
       </div>
     </div>
