@@ -174,23 +174,32 @@ const Checkout = () => {
         </div>
       </div>
 
-      {/* 💰 SUMMARY */}
-      <div className="bg-white p-4 rounded-xl mb-6 text-sm">
-        <div className="flex justify-between">
-          <span>Items Total</span>
-          <span>₹{itemsTotal}</span>
-        </div>
-        {discount > 0 && (
-          <div className="flex justify-between text-green-600">
-            <span>Promo Discount</span>
-            <span>-₹{discount}</span>
-          </div>
-        )}
-        <div className="flex justify-between font-bold border-t pt-2 mt-2">
-          <span>Total Payable</span>
-          <span>₹{totalAmount}</span>
-        </div>
-      </div>
+      {/* Price Summary */}
+<div className="mt-5 border-t pt-4 space-y-2 text-sm">
+
+  <div className="flex justify-between">
+    <span>Items Total</span>
+    <span>₹{itemsTotal}</span>
+  </div>
+
+  <div className="flex justify-between">
+    <span>Delivery Charge</span>
+    <span>₹{deliveryCharge}</span>
+  </div>
+
+  {discount > 0 && (
+    <div className="flex justify-between text-green-600">
+      <span>Promo Discount</span>
+      <span>- ₹{discount}</span>
+    </div>
+  )}
+
+  <div className="flex justify-between font-bold text-lg border-t pt-2 mt-2">
+    <span>Total Payable</span>
+    <span>₹{totalAmount}</span>
+  </div>
+
+</div>
 
       <button
         onClick={handlePlaceOrder}
