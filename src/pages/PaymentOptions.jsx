@@ -2,6 +2,7 @@ import React, { useState } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import { db, auth } from "../firebase";
 import { collection, addDoc, serverTimestamp } from "firebase/firestore";
+import { Wallet, Smartphone, CheckCircle } from "lucide-react";
 
 export default function PaymentOptions() {
   const navigate = useNavigate();
@@ -40,15 +41,10 @@ export default function PaymentOptions() {
     };
 
     try {
-      // Save to Firebase
       const docRef = await addDoc(collection(db, "orders"), orderData);
-
-      // Navigate to success page
       navigate("/order-success", {
         state: { ...orderData, orderId: docRef.id },
       });
-
-      // Clear cart
       localStorage.removeItem("cartItems");
     } catch (error) {
       console.error("Error saving order:", error);
@@ -56,51 +52,94 @@ export default function PaymentOptions() {
   };
 
   return (
-    <div className="max-w-xl mx-auto p-4">
-      <h2 className="text-2xl font-bold mb-4">Choose Payment Method</h2>
+    <div className="min-h-screen bg-gray-100 p-4">
+      <div className="max-w-md mx-auto bg-white rounded-xl shadow-lg p-5">
 
-      <div className="space-y-3">
-        <label className="block p-3 border rounded cursor-pointer">
-          <input
-            type="radio"
-            value="COD"
-            checked={paymentMethod === "COD"}
-            onChange={() => setPaymentMethod("COD")}
-            className="mr-2"
-          />
-          Cash on Delivery
-        </label>
+        <h2 className="text-xl font-bold mb-4 flex items-center gap-2">
+          <CheckCircle className="text-green-500" />
+          Payment Method
+        </h2>
 
-        <label className="block p-3 border rounded cursor-pointer">
-          <input
-            type="radio"
-            value="PHONEPE"
-            checked={paymentMethod === "PHONEPE"}
-            onChange={() => setPaymentMethod("PHONEPE")}
-            className="mr-2"
-          />
-          PhonePe / Google Pay
-          {paymentMethod === "PHONEPE" && (
-            <div className="mt-2 p-2 border rounded bg-gray-100">
-              <p className="text-sm">
-                Scan QR or use UPI ID: <strong>hacker@upi</strong>
+        {/* COD */}
+        <div
+          onClick={() => setPaymentMethod("COD")}
+          className={`border rounded-lg p-4 mb-3 cursor-pointer transition ${
+            paymentMethod === "COD"
+              ? "border-green-500 bg-green-50"
+              : "border-gray-200"
+          }`}
+        >
+          <div className="flex items-center gap-3">
+            <Wallet className="text-green-600" />
+            <div>
+              <p className="font-semibold">Cash on Delivery</p>
+              <p className="text-xs text-gray-500">
+                Pay when order arrives
               </p>
-              <img src="/upi-qr.png" alt="UPI QR" className="w-32 mt-2" />
+            </div>
+          </div>
+        </div>
+
+        {/* UPI */}
+        <div
+          onClick={() => setPaymentMethod("PHONEPE")}
+          className={`border rounded-lg p-4 cursor-pointer transition ${
+            paymentMethod === "PHONEPE"
+              ? "border-blue-500 bg-blue-50"
+              : "border-gray-200"
+          }`}
+        >
+          <div className="flex items-center gap-3">
+            <Smartphone className="text-blue-600" />
+            <div>
+              <p className="font-semibold">UPI / Google Pay / PhonePe</p>
+              <p className="text-xs text-gray-500">
+                Fast & secure payment
+              </p>
+            </div>
+          </div>
+
+          {paymentMethod === "PHONEPE" && (
+            <div className="mt-3 border rounded-lg p-3 bg-white">
+              <p className="text-sm">
+                UPI ID: <strong>hacker@upi</strong>
+              </p>
+              <img
+                src="/upi-qr.png"
+                alt="UPI QR"
+                className="w-32 mx-auto mt-2"
+              />
             </div>
           )}
-        </label>
-      </div>
+        </div>
 
-      <div className="mt-4 p-3 border rounded bg-gray-50">
-        <p className="font-bold text-lg">Total Amount: ₹{totalAmount}</p>
-      </div>
+        {/* Price Summary */}
+        <div className="mt-5 border-t pt-4 space-y-1 text-sm">
+          <div className="flex justify-between">
+            <span>Items Total</span>
+            <span>₹{itemsTotal}</span>
+          </div>
 
-      <button
-        onClick={handlePlaceOrder}
-        className="mt-4 w-full bg-green-500 text-white py-2 rounded"
-      >
-        Place Order
-      </button>
+          {discount > 0 && (
+            <div className="flex justify-between text-green-600">
+              <span>Discount</span>
+              <span>- ₹{discount}</span>
+            </div>
+          )}
+
+          <div className="flex justify-between font-bold text-lg mt-2">
+            <span>Total</span>
+            <span>₹{totalAmount}</span>
+          </div>
+        </div>
+
+        <button
+          onClick={handlePlaceOrder}
+          className="mt-5 w-full bg-green-500 hover:bg-green-600 text-white py-3 rounded-lg font-semibold text-lg"
+        >
+          Place Order
+        </button>
+      </div>
     </div>
   );
 }
