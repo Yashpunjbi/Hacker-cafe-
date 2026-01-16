@@ -155,19 +155,6 @@ const Checkout = () => {
           onChange={(e) => setPhone(e.target.value)}
         />
       </div>
-
-      {/* 📧 EMAIL */}
-      <div className="bg-white p-4 rounded-xl mb-4">
-        <p className="font-semibold mb-2">Email (Optional)</p>
-        <input
-          type="email"
-          className="w-full border rounded-lg p-2"
-          placeholder="example@gmail.com"
-          value={email}
-          onChange={(e) => setEmail(e.target.value)}
-        />
-      </div>
-
       {/* 🎟 PROMO */}
       <div className="bg-white p-4 rounded-xl mb-4">
         <p className="font-semibold mb-2">Promo Code</p>
@@ -192,10 +179,6 @@ const Checkout = () => {
         <div className="flex justify-between">
           <span>Items Total</span>
           <span>₹{itemsTotal}</span>
-        </div>
-        <div className="flex justify-between">
-          <span>Delivery Charge</span>
-          <span>₹{deliveryCharge}</span>
         </div>
         {discount > 0 && (
           <div className="flex justify-between text-green-600">
