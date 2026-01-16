@@ -114,25 +114,33 @@ export default function PaymentOptions() {
         </div>
 
         {/* Price Summary */}
-        <div className="mt-5 border-t pt-4 space-y-1 text-sm">
-          <div className="flex justify-between">
-            <span>Items Total</span>
-            <span>₹{itemsTotal}</span>
-          </div>
+<div className="mt-5 border-t pt-4 space-y-2 text-sm">
 
-          {discount > 0 && (
-            <div className="flex justify-between text-green-600">
-              <span>Discount</span>
-              <span>- ₹{discount}</span>
-            </div>
-          )}
+  <div className="flex justify-between">
+    <span>Items Total</span>
+    <span>₹{itemsTotal}</span>
+  </div>
 
-          <div className="flex justify-between font-bold text-lg mt-2">
-            <span>Total</span>
-            <span>₹{totalAmount}</span>
-          </div>
-        </div>
+  <div className="flex justify-between">
+    <span>Delivery Charge</span>
+    <span>₹{deliveryCharge}</span>
+  </div>
 
+  {discount > 0 && (
+    <div className="flex justify-between text-green-600">
+      <span>Promo Discount</span>
+      <span>- ₹{discount}</span>
+    </div>
+  )}
+
+  <div className="flex justify-between font-bold text-lg border-t pt-2 mt-2">
+    <span>Total Payable</span>
+    <span>₹{totalAmount}</span>
+  </div>
+
+</div>
+
+          
         <button
           onClick={handlePlaceOrder}
           className="mt-5 w-full bg-green-500 hover:bg-green-600 text-white py-3 rounded-lg font-semibold text-lg"
