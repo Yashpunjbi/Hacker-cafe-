@@ -31,6 +31,10 @@ const getETA = (status) => {
       return "15–20 minutes";
     case "OutForDelivery":
       return "5–10 minutes";
+    case "Delivered":
+      return "Delivered ✅";
+    case "Cancelled":
+      return "Order Cancelled ❌";
     default:
       return "Calculating...";
   }
@@ -54,19 +58,12 @@ const TrackOrder = () => {
     setOrderData(null);
 
     try {
-      const orderRef = doc(db, "orders", id);
-      const orderSnap = await getDoc(orderRef);
-
-      if (orderSnap.exists()) {
-        setOrderData(orderSnap.data());
-      } else {
-        setError("Order not found ❌");
-      }
-    } catch (err) {
-      console.error(err);
+      const snap = await getDoc(doc(db, "orders", id));
+      if (snap.exists()) setOrderData(snap.data());
+      else setError("Order not found ❌");
+    } catch {
       setError("Something went wrong");
     }
-
     setLoading(false);
   };
 
@@ -74,7 +71,10 @@ const TrackOrder = () => {
     if (paramOrderId) handleTrack(paramOrderId);
   }, [paramOrderId]);
 
-  const getStepIndex = (status) => statusSteps.findIndex((s) => s.key === status);
+  const getStepIndex = (status) =>
+    statusSteps.findIndex((s) => s.key === status);
+
+  const isCancelled = orderData?.status === "Cancelled";
 
   return (
     <div className="min-h-screen bg-gray-100 p-4">
@@ -86,49 +86,60 @@ const TrackOrder = () => {
           <p className="text-sm opacity-90 mt-1">Real-time order status</p>
         </div>
 
-        {/* Input */}
+        {/* Search */}
         {!paramOrderId && (
           <div className="p-5 space-y-3">
             <div className="flex gap-2">
               <input
-                type="text"
-                placeholder="Enter Order ID"
                 value={orderId}
                 onChange={(e) => setOrderId(e.target.value)}
-                className="border rounded-xl px-3 py-2 w-full focus:outline-none focus:ring-2 focus:ring-red-400"
+                placeholder="Enter Order ID"
+                className="border rounded-xl px-3 py-2 w-full"
               />
               <button
                 onClick={() => handleTrack()}
-                className="bg-red-500 text-white px-4 rounded-xl flex items-center gap-1"
+                className="bg-red-500 text-white px-4 rounded-xl"
               >
                 <Search size={18} />
               </button>
             </div>
-            {error && <p className="text-red-500 text-center text-sm">{error}</p>}
+            {error && <p className="text-red-500 text-center">{error}</p>}
           </div>
         )}
 
-        {/* Order Data */}
         {orderData && (
           <div className="px-5 pb-5 space-y-5">
 
-            {/* Status Timeline */}
+            {/* STATUS */}
             <div>
               <h3 className="font-semibold mb-3">Order Status</h3>
+
+              {isCancelled && (
+                <div className="mb-3 bg-red-50 border border-red-200 rounded-xl p-3 text-center text-red-600 font-semibold">
+                  ❌ Order Cancelled
+                </div>
+              )}
+
               <div className="space-y-4">
                 {statusSteps.map((step, index) => {
                   const Icon = step.icon;
-                  const active = index <= getStepIndex(orderData.status);
+                  const active =
+                    step.key === "Placed" ||
+                    (!isCancelled &&
+                      index <= getStepIndex(orderData.status));
+
                   return (
                     <div key={step.key} className="flex items-center gap-3">
                       <div
-                        className={`w-9 h-9 flex items-center justify-center rounded-full ${
-                          active ? "bg-green-500 text-white" : "bg-gray-300 text-gray-600"
+                        className={`w-9 h-9 rounded-full flex items-center justify-center ${
+                          active
+                            ? "bg-green-500 text-white"
+                            : "bg-gray-300"
                         }`}
                       >
                         <Icon size={18} />
                       </div>
-                      <span className={`text-sm font-medium ${active ? "text-black" : "text-gray-500"}`}>
+                      <span className={active ? "" : "text-gray-500"}>
                         {step.label}
                       </span>
                     </div>
@@ -138,27 +149,37 @@ const TrackOrder = () => {
             </div>
 
             {/* ETA */}
-            <div className="bg-green-50 border border-green-200 rounded-xl p-4 text-center">
-              <p className="text-sm text-gray-600">Estimated Delivery Time</p>
-              <p className="text-xl font-bold text-green-600 mt-1">{getETA(orderData.status)}</p>
+            <div
+              className={`rounded-xl p-4 text-center ${
+                isCancelled
+                  ? "bg-red-50 border border-red-200"
+                  : "bg-green-50 border border-green-200"
+              }`}
+            >
+              <p className="text-sm">Estimated Delivery Time</p>
+              <p className="text-xl font-bold mt-1">
+                {getETA(orderData.status)}
+              </p>
             </div>
 
-            {/* Customer Info */}
+            {/* CUSTOMER */}
             <div className="bg-gray-50 rounded-xl p-4 text-sm space-y-2">
-              <p className="flex items-center gap-2"><User size={16} /> {orderData.name}</p>
-              <p className="flex items-center gap-2"><Phone size={16} /> {orderData.phone}</p>
-              <p className="flex items-start gap-2"><MapPin size={16} className="mt-0.5" /> {orderData.address}</p>
+              <p className="flex gap-2"><User size={16} /> {orderData.name}</p>
+              <p className="flex gap-2"><Phone size={16} /> {orderData.phone}</p>
+              <p className="flex gap-2"><MapPin size={16} /> {orderData.address}</p>
             </div>
 
-            {/* Total Amount */}
-            <div className="flex justify-between items-center border-t pt-3 text-sm font-semibold">
-              <span className="flex items-center gap-1"><IndianRupee size={16} /> Total Amount</span>
-              <span className="text-green-600 text-lg">₹{orderData.amount}</span>
+            {/* TOTAL */}
+            <div className="flex justify-between font-semibold border-t pt-3">
+              <span className="flex gap-1"><IndianRupee size={16}/>Total</span>
+              <span className="text-green-600 text-lg">
+                ₹{orderData.amount}
+              </span>
             </div>
           </div>
         )}
 
-        {loading && <p className="text-center py-4 text-gray-500">Tracking your order...</p>}
+        {loading && <p className="text-center py-4">Tracking...</p>}
       </div>
     </div>
   );
