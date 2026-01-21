@@ -7,7 +7,7 @@ import { auth } from "./firebase";
 import Home from "./pages/Home";
 import Menu from "./pages/Menu";
 import Cart from "./pages/Cart";
-import Offers from "./pages/Offers";
+import Tiffins from "./pages/tiffins";
 import Checkout from "./pages/Checkout";
 import OrderHistory from "./pages/OrderHistory";
 import Login from "./pages/Login";
