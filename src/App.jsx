@@ -7,7 +7,7 @@ import { auth } from "./firebase";
 import Home from "./pages/Home";
 import Menu from "./pages/Menu";
 import Cart from "./pages/Cart";
-import Tiffins from "./pages/tiffins";
+import Tiffin from "./pages/tiffin";
 import Checkout from "./pages/Checkout";
 import OrderHistory from "./pages/OrderHistory";
 import Login from "./pages/Login";
@@ -46,7 +46,7 @@ const App = () => {
             <Route path="/" element={<Home />} />
             <Route path="/menu" element={<Menu />} />
             <Route path="/cart" element={<Cart />} />
-            <Route path="/offers" element={<Offers />} />
+            <Route path="/tiffin" element={<Tiffin />} />
             <Route path="/checkout" element={<Checkout />} />
             <Route path="/orders" element={<OrderHistory />} />
             <Route path="/contact" element={<Contact />} />
