@@ -21,6 +21,8 @@ import Profile from "./pages/Profile";
 
 import BottomNavbar from "./components/BottomNav";
 import Navbar from "./components/Navbar";
+import Banner from "./components/Banner";
+
 
 import { ToastContainer } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
@@ -47,6 +49,7 @@ const App = () => {
             <Route path="/menu" element={<Menu />} />
             <Route path="/cart" element={<Cart />} />
             <Route path="/tiffin" element={<Tiffin />} />
+<Route path="/banner" element={<Banner />} />
             <Route path="/checkout" element={<Checkout />} />
             <Route path="/orders" element={<OrderHistory />} />
             <Route path="/contact" element={<Contact />} />
