@@ -11,37 +11,27 @@ const Home = () => {
   const [categories, setCategories] = useState([]);
   const { addToCart } = useCart();
 
-  // Slider state
   const [currentBanner, setCurrentBanner] = useState(0);
 
   useEffect(() => {
+    // 🔥 BANNERS FILTERED FOR HOME PAGE
     const unsubBanner = onSnapshot(collection(db, "banners"), (snapshot) => {
-      const data = snapshot.docs.map((doc) => ({ id: doc.id, ...doc.data() }));
-      setBanners(data);
+      const homeBanners = snapshot.docs
+        .map((doc) => ({ id: doc.id, ...doc.data() }))
+        .filter((b) => b.page === "home"); // only home page banners
+      setBanners(homeBanners);
     });
 
-    const unsubCategories = onSnapshot(
-      collection(db, "categories"),
-      (snapshot) => {
-        const data = snapshot.docs.map((doc) => ({
-          id: doc.id,
-          ...doc.data(),
-        }));
-        setCategories(data);
-      }
-    );
+    const unsubCategories = onSnapshot(collection(db, "categories"), (snapshot) => {
+      const data = snapshot.docs.map((doc) => ({ id: doc.id, ...doc.data() }));
+      setCategories(data);
+    });
 
     const unsubProducts = onSnapshot(collection(db, "products"), (snapshot) => {
-      const allProducts = snapshot.docs.map((doc) => ({
-        id: doc.id,
-        ...doc.data(),
-      }));
-
-      // Sirf "home" category wale products
+      const allProducts = snapshot.docs.map((doc) => ({ id: doc.id, ...doc.data() }));
       const homeProducts = allProducts.filter((item) =>
         item.category?.toLowerCase().includes("home")
       );
-
       setProducts(homeProducts);
     });
 
@@ -59,18 +49,16 @@ const Home = () => {
 
   // 🔥 Auto slide effect
   useEffect(() => {
-    if (banners.length <= 1) return; // sirf 1 banner ho to slide ki zarurat nahi
+    if (banners.length <= 1) return;
     const interval = setInterval(() => {
       setCurrentBanner((prev) => (prev + 1) % banners.length);
-    }, 4000); // 4 seconds
-
+    }, 4000);
     return () => clearInterval(interval);
   }, [banners]);
 
   return (
     <div className="min-h-screen bg-white">
-
-      {/* 🔥 BANNERS SLIDER */}
+      {/* 🔥 BANNER SLIDER */}
       {banners.length > 0 && (
         <div className="relative w-full h-[50vh] md:h-[55vh] overflow-hidden">
           <div
@@ -138,11 +126,7 @@ const Home = () => {
                 key={item.id}
                 className="bg-white rounded-2xl border border-red-100 shadow-sm hover:shadow-lg transition overflow-hidden"
               >
-                <img
-                  src={item.image}
-                  alt={item.name}
-                  className="w-full h-44 object-cover"
-                />
+                <img src={item.image} alt={item.name} className="w-full h-44 object-cover" />
 
                 <div className="p-4">
                   <h3 className="text-lg font-bold text-gray-800">{item.name}</h3>
