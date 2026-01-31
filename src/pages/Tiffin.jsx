@@ -48,7 +48,7 @@ const Tiffin = () => {
   };
 
   return (
-    <div className="p-4 bg-gray-50 min-h-screen">
+    <div className="bg-gray-50 min-h-screen overflow-x-hidden">
 
       {/* 🔥 BANNER SLIDER */}
       {banners.length > 0 && (
