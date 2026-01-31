@@ -51,43 +51,49 @@ const Tiffin = () => {
     <div className="bg-gray-50 min-h-screen overflow-x-hidden">
 
       {/* 🔥 BANNER SLIDER */}
-      {banners.length > 0 && (
-        <div className="relative w-full h-[45vh] md:h-[50vh] overflow-hidden mb-6">
-          <div
-            className="flex transition-transform duration-700 ease-in-out h-full"
-            style={{ transform: `translateX(-${currentBanner * 100}%)` }}
-          >
-            {banners.map((b) => (
-              <div key={b.id} className="min-w-full h-full">
-                <img
-                  src={b.image}
-                  alt={b.title || "Banner"}
-                  className="w-full h-full object-cover"
-                />
-              </div>
-            ))}
-          </div>
-
-          {/* Dots */}
-          <div className="absolute bottom-3 left-1/2 transform -translate-x-1/2 flex gap-2">
-            {banners.map((_, i) => (
-              <span
-                key={i}
-                className={`w-3 h-3 rounded-full ${
-                  currentBanner === i ? "bg-red-500" : "bg-white"
-                } border border-gray-300`}
-              ></span>
-            ))}
-          </div>
+      {/* 🔥 BANNER SLIDER (FULL WIDTH – EDGE TO EDGE) */}
+{banners.length > 0 && (
+  <div className="relative w-screen h-[45vh] reminder:h-[50vh] overflow-hidden mb-6">
+    <div
+      className="flex h-full transition-transform duration-700 ease-in-out"
+      style={{ transform: `translateX(-${currentBanner * 100}%)` }}
+    >
+      {banners.map((b) => (
+        <div key={b.id} className="min-w-full h-full">
+          <img
+            src={b.image}
+            alt={b.title || "Banner"}
+            className="w-full h-full object-cover"
+          />
         </div>
+      ))}
+    </div>
+
+    {/* Dots */}
+    <div className="absolute bottom-3 left-1/2 -translate-x-1/2 flex gap-2">
+      {banners.map((_, i) => (
+        <span
+          key={i}
+          className={`w-3 h-3 rounded-full ${
+            currentBanner === i ? "bg-red-500" : "bg-white"
+          }`}
+        />
+      ))}
+    </div>
+  </div>
+)}
       )}
 
       {/* 🔥 Tiffin Items */}
-      <h1 className="text-2xl font-bold mb-4 text-gray-800">🏫 School Tiffin Service</h1>
+      <div className="p-4">
+  <h1 className="text-2xl font-bold mb-4 text-gray-800">
+    🏫 School Tiffin Service
+  </h1>
 
-      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-5">
-        {tiffins.map((t) => (
-          <div
+  <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-5">
+    {/* tiffin cards */}
+  </div>
+</div>
             key={t.id}
             className={`bg-white rounded-2xl shadow-md overflow-hidden ${
               !t.available ? "opacity-70" : ""
